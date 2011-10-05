@@ -1,9 +1,9 @@
-$def with (title, content, static_files=None)
+$def with (req_path, title, content, static_files=None)
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>Editing $title</title>
+    <title>Editing $req_path</title>
 
     $if static_files:
         $static_files
@@ -15,7 +15,7 @@ $def with (title, content, static_files=None)
 
 <div id="container">
 
-<h2>Editing: $title</h2>
+<h2>Editing: $req_path</h2>
 
 
 

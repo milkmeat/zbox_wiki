@@ -126,8 +126,18 @@ def convert_static_file_url(text, static_file_prefix):
 
 def convert_text_path_to_button_path(path):
     buf = convert_path_to_hierarchy(path)
-    button_path = " / ".join(["[%s](%s)" % (i[0], i[1]) for i in buf])
-    return "/ %s" % button_path
+    IS_ONLY_ONE_LEVEL = len(buf) == 1    
+    button_path = " / ".join(["[%s](%s/)" % (i[0], i[1]) for i in buf[:-1]])
+
+    latest_level = buf[-1]
+    path_name = latest_level[0]
+
+    if IS_ONLY_ONE_LEVEL:
+        button_path = path_name
+    else:
+        button_path = "%s / %s" % (button_path, path_name)
+
+    return button_path
 
 def sequence_to_unorder_list(lines, strips_seq_item=None):
     """

@@ -346,7 +346,7 @@ class WikiPage:
             filepath = osp.join("/static", "js", "editor.js")
             static_files = _append_static_file(static_files, filepath, file_type="js", add_newline=True)
 
-            return t_render.editor(title, content, static_files=static_files)
+            return t_render.editor(req_path, title, content, static_files=static_files)
         elif action == "rename":
             if not osp.exists(fullpath):
                 raise web.NotFound()

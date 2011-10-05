@@ -9,6 +9,8 @@ def convert_path_to_hierarchy(path):
         >>> t1 = [('shugelab', '/shugelab'), ('users', '/shugelab/users'), ('lee', '/shugelab/users/lee')]
         >>> convert_path_to_hierarchy(path) == t1
         True
+        >>> convert_path_to_hierarchy('/') == [('index', '/~index')]
+        True
     """
     caches = []
 
@@ -21,7 +23,7 @@ def convert_path_to_hierarchy(path):
         step = -1
         for i in range(start, stop, step):
             name = parts[i + 1]
-            links = "/" + "/".join(parts[1 : i + 2])
+            links = "/%s" % "/".join(parts[1 : i + 2])
             if name == '':
                 continue
             caches.append((name, links))

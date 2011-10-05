@@ -18,7 +18,6 @@ osp = os.path
 __all__ = ["convert_static_file_url",
            "convert_path_to_hierarchy",
            "convert_text_path_to_button_path",
-           "sequence_to_unorder_list",
            "trac_wiki_code_block_to_markdown_code",
            "convert_latex_code",
            "markdown"]
@@ -138,26 +137,6 @@ def convert_text_path_to_button_path(path):
         button_path = "%s / %s" % (button_path, path_name)
 
     return button_path
-
-def sequence_to_unorder_list(lines, strips_seq_item=None):
-    """
-        >>> sequence_to_unorder_list(['a','b','c'])
-        '- [a](/a)\\n- [b](/b)\\n- [c](/c)'
-    """
-    lis = []
-
-    for i in lines:
-        i = web.utils.strips(i, "./")
-        if strips_seq_item:
-            i = web.utils.strips(i, strips_seq_item)
-
-        url = osp.join("/", i)
-        lis.append('- [%s](%s)' % (i, url))
-
-    content = "\n".join(lis)
-    content = web.utils.safeunicode(content)
-
-    return content
 
 def markdown(text, work_fullpath = None, static_file_prefix = None):
     if work_fullpath:

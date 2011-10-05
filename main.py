@@ -2,6 +2,7 @@
 #-*- coding:utf-8 -*-
 import cgi
 import os
+import re
 import shutil
 
 import web
@@ -15,9 +16,8 @@ osp = os.path
 
 
 urls = (
-    '/', 'WikiIndex',
     '/~([a-zA-Z0-9_\-/.]+)', 'SpecialWikiPage',
-    ur'/([a-zA-Z0-9_\-/.%s]+)' % zunicode.CJK_RANGE, 'WikiPage',
+    ur'/([a-zA-Z0-9_\-/.%s]*)' % zunicode.CJK_RANGE, 'WikiPage',
 )
 
 app = web.application(urls, globals())
@@ -44,15 +44,22 @@ def session_hook():
 app.add_processor(web.loadhook(session_hook))
 
 
-def get_recent_change_list(limit):
+def get_recent_change_list(limit, show_fullpath = True):
     get_rc_list_cmd = " cd %s; find . -name '*.md' | xargs ls -t | head -n %d " % \
                       (conf.pages_path, limit)
     buf = os.popen(get_rc_list_cmd).read().strip()
 
     if buf:
+        buf = web.utils.safeunicode(buf)
         lines = buf.split("\n")
         strips_seq_item = ".md"
-        return zmarkdown_utils.sequence_to_unorder_list(lines, strips_seq_item)
+
+        if show_fullpath:
+            callable_obj = None
+        else:
+            callable_obj = get_page_file_title
+
+        return sequence_to_unorder_list(lines, strips_seq_item, callable_obj=callable_obj)
 
 def get_page_file_or_dir_fullpath_by_req_path(req_path):
     if not req_path.endswith("/"):
@@ -62,12 +69,32 @@ def get_page_file_or_dir_fullpath_by_req_path(req_path):
     else:
         return osp.join(conf.pages_path, req_path)
 
+def get_page_file_title(req_path):
+    """
+        >>> get_page_file_title('application/air/run-air-application-on-gentoo')
+        'run air application on gentoo'
+    """
+    fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
+    c = zsh_util.cat(fullpath)
+
+    p = '^#\s(?P<title>.+?)\s$'
+    p_obj = re.compile(p, re.MULTILINE)
+    match_obj = p_obj.search(c)
+    if match_obj:
+        title = match_obj.group('title')
+    elif '/' in req_path:
+        title = req_path.split('/')[-1].replace('-', ' ')
+    else:
+        title = 'untitled'
+
+    return title
+
 def get_dot_idx_content_by_fullpath(fullpath):
     dot_idx_fullpath = osp.join(fullpath, ".index.md")
     return zsh_util.cat(dot_idx_fullpath)
 
 
-def get_page_file_list_content_by_fullpath(fullpath):
+def get_page_file_list_content_by_fullpath(fullpath, show_fullpath=True):
     req_path = fullpath.replace(conf.pages_path, "")
     req_path = web.utils.strips(req_path, "/")
 
@@ -75,9 +102,16 @@ def get_page_file_list_content_by_fullpath(fullpath):
     buf = os.popen(tree_cmd).read().strip()
 
     if buf:
+        buf = web.utils.safeunicode(buf)
         lines = buf.split("\n")
         strips_seq_item = ".md"
-        return zmarkdown_utils.sequence_to_unorder_list(lines=lines, strips_seq_item=strips_seq_item)
+
+        if show_fullpath:
+            callable_obj = None
+        else:
+            callable_obj = get_page_file_title
+
+        return sequence_to_unorder_list(lines=lines, strips_seq_item=strips_seq_item)
 
 def delete_page_file_by_fullpath(fullpath):
     if osp.isfile(fullpath):
@@ -89,15 +123,46 @@ def delete_page_file_by_fullpath(fullpath):
         return True
     return False
 
-def get_page_file_index(limit=1000):
-    get_page_file_index_cmd = " cd %s; find . -name '*.md' | xargs ls -t | head -n %d " % (conf.pages_path, limit)
-    lines = os.popen(get_page_file_index_cmd).read().strip()
-    if lines:
-        lines = lines.split("\n")
-        content = zmarkdown_utils.sequence_to_unorder_list(lines, strips_seq_item=".md")
+def get_page_file_index(limit=conf.index_page_limit, show_fullpath = True):
+    get_page_file_index_cmd = " cd %s; find . -name '*.md' | head -n %d " % (conf.pages_path, limit)
+    buf = os.popen(get_page_file_index_cmd).read().strip()
+    if buf:
+        buf = web.utils.safeunicode(buf)
+        lines = buf.split("\n")
+
+        if show_fullpath:
+            callable_obj = None
+        else:
+            callable_obj = get_page_file_title
+
+        content = sequence_to_unorder_list(lines, strips_seq_item=".md", callable_obj=callable_obj)
         return content
 
-def search_by_filename_and_file_content(keywords, limit):
+def sequence_to_unorder_list(lines, strips_seq_item=None, callable_obj=None):
+    """
+        >>> sequence_to_unorder_list(['a','b','c'])
+        '- [a](/a)\\n- [b](/b)\\n- [c](/c)'
+    """
+    lis = []
+
+    for i in lines:
+        name = web.utils.strips(i, "./")
+        if strips_seq_item:
+            name = web.utils.strips(name, strips_seq_item)
+
+        url = osp.join("/", name)
+        if callable_obj:
+            name = apply(callable_obj, (name, ))
+        lis.append('- [%s](%s)' % (name, url))
+
+    content = "\n".join(lis)
+    content = web.utils.safeunicode(content)
+
+    return content
+
+def search_by_filename_and_file_content(keywords,
+                                        limit = conf.search_page_limit,
+                                        show_fullpath = True):
     """
     Following doesn't works if cmd contains pipe character:
 
@@ -116,7 +181,7 @@ def search_by_filename_and_file_content(keywords, limit):
     if is_multiple_keywords:
         find_by_filename_cmd = " cd %s; "\
                                " find . \( -name %s \) -type f | " \
-                               " grep '.md' | head -n %d " % \
+                               " grep '.md$' | head -n %d " % \
                                (conf.pages_path, find_by_filename_matched, limit)
 
         find_by_content_cmd = " cd %s; " \
@@ -125,7 +190,8 @@ def search_by_filename_and_file_content(keywords, limit):
                               (conf.pages_path, find_by_content_matched, limit)
     else:
         find_by_filename_cmd = " cd %s; " \
-                               " find . -name %s -type f | head -n %d " % \
+                               " find . -name %s -type f | " \
+                               " grep '.md$' | head -n %d " % \
                                (conf.pages_path, find_by_filename_matched, limit)
 
         find_by_content_cmd = " cd %s; " \
@@ -133,20 +199,22 @@ def search_by_filename_and_file_content(keywords, limit):
                               " awk -F ':' '{print $1}' | uniq | head -n %d " % \
                               (conf.pages_path, find_by_content_matched, limit)
 
-    # print "find_by_filename_cmd:"
-    # print find_by_filename_cmd
+    print "find_by_filename_cmd:"
+    print find_by_filename_cmd
 
-    # print "find_by_content_cmd:"
-    # print find_by_content_cmd
+    print "find_by_content_cmd:"
+    print find_by_content_cmd
 
     matched_content_lines = os.popen(find_by_content_cmd).read().strip()
     matched_content_lines = web.utils.safeunicode(matched_content_lines)
     if matched_content_lines:
+        matched_content_lines = web.utils.safeunicode(matched_content_lines)
         matched_content_lines = matched_content_lines.split("\n")
 
     matched_filename_lines = os.popen(find_by_filename_cmd).read().strip()
     matched_filename_lines = web.utils.safeunicode(matched_filename_lines)
     if matched_filename_lines:
+        matched_filename_lines = web.utils.safeunicode(matched_filename_lines)
         matched_filename_lines = matched_filename_lines.split("\n")
 
     if matched_content_lines and matched_filename_lines:
@@ -162,7 +230,13 @@ def search_by_filename_and_file_content(keywords, limit):
         return None
 
     lines = mixed
-    content = zmarkdown_utils.sequence_to_unorder_list(lines, strips_seq_item=".md")
+
+    if show_fullpath:
+        callable_obj = None
+    else:
+        callable_obj = get_page_file_title
+
+    content = sequence_to_unorder_list(lines, strips_seq_item=".md", callable_obj=callable_obj)
 
     return content
 
@@ -254,32 +328,115 @@ def get_the_same_folders_cssjs_files(req_path):
 
     return "%s\n    %s" % (css_buf, js_buf)
 
+def wp_read_recent_change():
+    inputs = web.input()
+    limit = inputs.get("limit")
 
-class WikiIndex:
-    def GET(self):
-        inputs = web.input()
-        limit = inputs.get("limit")
+    show_fullpath = inputs.get("show_fullpath", True)
+    if show_fullpath == "0":
+        show_fullpath = False
 
-        title = "Recnet Changes"
-        static_file_prefix = "/static/pages"
-        req_path = "/"        
+    title = "Recnet Changes"
+    static_file_prefix = "/static/pages"
+    req_path = title
 
-        if limit:
-            limit = int(limit) or conf.index_page_limit
-            content = get_recent_change_list(limit)
-        else:
-            content = get_recent_change_list(conf.index_page_limit)
+    if limit:
+        limit = int(limit) or conf.index_page_limit
+        content = get_recent_change_list(limit, show_fullpath=show_fullpath)
+    else:
+        content = get_recent_change_list(conf.index_page_limit, show_fullpath=show_fullpath)
 
-        fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
-        content = zmarkdown_utils.markdown(text=content,
-                                           work_fullpath=fullpath,
-                                           static_file_prefix=static_file_prefix)
+    fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
+    content = zmarkdown_utils.markdown(text=content,
+                                       work_fullpath=fullpath,
+                                       static_file_prefix=static_file_prefix)
 
-        static_files = DEFAULT_GLOBAL_STATIC_FILES
-        # static_files = "%s\n    %s" % (static_files, get_the_same_folders_cssjs_files(req_path))
+    static_files = DEFAULT_GLOBAL_STATIC_FILES
+    # static_files = "%s\n    %s" % (static_files, get_the_same_folders_cssjs_files(req_path))
 
-        return t_render.canvas(req_path=req_path, title=title, content=content, toolbox=False,
-                               static_files = static_files)
+    return t_render.canvas(req_path=req_path, title=title, content=content, toolbox=False,
+                           static_files = static_files)
+
+def wp_read(req_path):
+    fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
+
+    if conf.use_button_mode_path:
+        buf = zmarkdown_utils.convert_text_path_to_button_path("/%s" % req_path)
+        title = zmarkdown_utils.markdown(buf)
+    else:
+        title = req_path
+
+    if osp.isfile(fullpath):
+        work_fullpath = osp.dirname(fullpath)
+        static_file_prefix = osp.join("/static/pages", osp.dirname(req_path))
+        
+        content = zsh_util.cat(fullpath)
+    elif osp.isdir(fullpath):
+        work_fullpath = fullpath
+        static_file_prefix = osp.join("/static/pages", req_path)
+        
+        dot_idx_content = get_dot_idx_content_by_fullpath(fullpath)
+        page_file_list_content = get_page_file_list_content_by_fullpath(fullpath)
+        content = ""
+
+        if dot_idx_content:
+            content = dot_idx_content
+        if page_file_list_content:
+            content = "%s\n\n----\n%s" % (content, page_file_list_content)
+    else:
+        web.seeother("/%s?action=edit" % req_path)
+        return
+
+    content = zmarkdown_utils.markdown(text=content,
+                                       work_fullpath=work_fullpath,
+                                       static_file_prefix=static_file_prefix)
+
+    static_files = DEFAULT_GLOBAL_STATIC_FILES
+    static_files = "%s\n    %s" % (static_files, get_the_same_folders_cssjs_files(req_path))
+
+    return t_render.canvas(req_path=req_path, title=title, content=content, static_files=static_files)
+
+def wp_edit(req_path):
+    fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
+
+    if conf.use_button_mode_path:
+        buf = zmarkdown_utils.convert_text_path_to_button_path("/%s" % req_path)
+        title = zmarkdown_utils.markdown(buf)
+    else:
+        title = req_path    
+
+    if osp.isfile(fullpath):
+        content = zsh_util.cat(fullpath)
+    elif osp.isdir(fullpath):
+        content = get_dot_idx_content_by_fullpath(fullpath)
+    elif not osp.exists(fullpath):
+        content = ""
+    else:
+        raise Exception("unknow path")
+
+    static_files = DEFAULT_GLOBAL_STATIC_FILES
+    filepath = osp.join("/static", "css", "pagedown.css")
+    static_files = _append_static_file(static_files, filepath, file_type="css", add_newline=True)
+    filepath = osp.join("/static", "js", "editor.js")
+    static_files = _append_static_file(static_files, filepath, file_type="js", add_newline=True)
+
+    return t_render.editor(req_path, title, content, static_files=static_files)
+
+def wp_rename(req_path):
+    fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
+    
+    if not osp.exists(fullpath):
+        raise web.NotFound()
+
+    return t_render.rename(req_path, static_files=DEFAULT_GLOBAL_STATIC_FILES)    
+
+def wp_delete(req_path):
+    fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
+    
+    delete_page_file_by_fullpath(fullpath)
+
+    web.seeother("/")
+    return
 
 
 class WikiPage:
@@ -291,72 +448,17 @@ class WikiPage:
         if action and action not in ("edit", "read", "rename", "delete"):
             raise web.BadRequest()
 
-        fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
-
-        if conf.use_button_mode_path:
-            buf = zmarkdown_utils.convert_text_path_to_button_path("/%s" % req_path)
-            title = zmarkdown_utils.markdown(buf)
-        else:
-            title = req_path
-
-        if osp.isfile(fullpath):
-            work_fullpath = osp.dirname(fullpath)
-            static_file_prefix = osp.join("/static/pages", osp.dirname(req_path))
-        elif osp.isdir(fullpath):
-            work_fullpath = fullpath
-            static_file_prefix = osp.join("/static/pages", req_path)            
-
         if action == "read":
-            if osp.isfile(fullpath):
-                content = zsh_util.cat(fullpath)
-            elif osp.isdir(fullpath):
-                dot_idx_content = get_dot_idx_content_by_fullpath(fullpath)
-                page_file_list_content = get_page_file_list_content_by_fullpath(fullpath)
-                content = ""
-
-                if dot_idx_content:
-                    content = dot_idx_content
-                if page_file_list_content:
-                    content = "%s\n\n----\n%s" % (content, page_file_list_content)
+            if req_path == "":
+                return wp_read_recent_change()
             else:
-                web.seeother("/%s?action=edit" % req_path)
-                return
-            
-            content = zmarkdown_utils.markdown(text=content,
-                                               work_fullpath=work_fullpath,
-                                               static_file_prefix=static_file_prefix)
-
-            static_files = DEFAULT_GLOBAL_STATIC_FILES
-            static_files = "%s\n    %s" % (static_files, get_the_same_folders_cssjs_files(req_path))
-
-            return t_render.canvas(req_path=req_path, title=title, content=content, static_files=static_files)
+                return wp_read(req_path)
         elif action == "edit":
-            if osp.isfile(fullpath):
-                content = zsh_util.cat(fullpath)
-            elif osp.isdir(fullpath):
-                content = get_dot_idx_content_by_fullpath(fullpath)
-            elif not osp.exists(fullpath):
-                content = ""
-            else:
-                raise Exception("unknow path")
-
-            static_files = DEFAULT_GLOBAL_STATIC_FILES
-            filepath = osp.join("/static", "css", "pagedown.css")
-            static_files = _append_static_file(static_files, filepath, file_type="css", add_newline=True)                        
-            filepath = osp.join("/static", "js", "editor.js")
-            static_files = _append_static_file(static_files, filepath, file_type="js", add_newline=True)
-
-            return t_render.editor(req_path, title, content, static_files=static_files)
+            return wp_edit(req_path)
         elif action == "rename":
-            if not osp.exists(fullpath):
-                raise web.NotFound()
-
-            return t_render.rename(req_path, static_files=DEFAULT_GLOBAL_STATIC_FILES)
+            return wp_rename(req_path)
         elif action == "delete":
-            delete_page_file_by_fullpath(fullpath)
-
-            web.seeother("/")
-            return
+            return wp_delete(req_path)
 
         raise web.BadRequest()
 
@@ -426,48 +528,59 @@ class SpecialWikiPage:
     def GET(self, req_path):
         f = special_path_mapping.get(req_path)
 
-        if f:
-            if req_path == "index":
-                index = f
-                content = index()
-                content = zmarkdown_utils.markdown(content)
+        if not f:
+            raise web.NotFound()
 
-                static_files = DEFAULT_GLOBAL_STATIC_FILES
-                static_files = "%s\n    %s" % (static_files, get_the_same_folders_cssjs_files(req_path))
+        inputs = web.input()
+        show_fullpath = inputs.get("show_fullpath", True)
+        if show_fullpath == "0":
+            show_fullpath = False
 
-                req_path = "~index"
-                title = "index"
-                return t_render.canvas(req_path=req_path, title=title, content=content, toolbox=False,
-                                       static_files=static_files)
+        limit = inputs.get("limit", conf.index_page_limit)
+        if limit:
+            limit = int(limit)
 
-        raise web.NotFound()
+        if req_path == "index":
+            content = get_page_file_index(limit=limit, show_fullpath=show_fullpath)
+            content = zmarkdown_utils.markdown(content)
+
+            static_files = DEFAULT_GLOBAL_STATIC_FILES
+            static_files = "%s\n    %s" % (static_files, get_the_same_folders_cssjs_files(req_path))
+
+            req_path = "~index"
+            title = "index"
+            return t_render.canvas(req_path=req_path, title=title, content=content, toolbox=False,
+                                   static_files=static_files)
+
+
 
     def POST(self, req_path):
         f = special_path_mapping.get(req_path)
         inputs = web.input()
 
-        if f:
-            keywords = inputs.get("k")
-            limit = inputs.get("limit")
-
-            keywords = web.utils.safestr(keywords)
-            search = f
-
-            if limit:
-                limit = int(limit) or conf.search_page_limit
-                content = search(keywords, limit)
-            else:
-                content = search(keywords, conf.search_page_limit)
-                
-            if content:
-                content = zmarkdown_utils.markdown(content)
-            else:
-                content = "not found matched"
-
-            return t_render.search(keywords=keywords, content=content,
-                                   static_files=DEFAULT_GLOBAL_STATIC_FILES)
-        else:
+        if not f:
             raise web.NotFound()
+
+        keywords = inputs.get("k")
+        keywords = web.utils.safestr(keywords)
+
+        if not keywords:
+            raise web.BadRequest()
+
+        limit = inputs.get("limit", conf.search_page_limit)
+        if limit:
+            limit = int(limit)
+
+        content = search_by_filename_and_file_content(keywords, limit=limit)
+
+        if content:
+            content = zmarkdown_utils.markdown(content)
+        else:
+            content = "not found matched"
+
+        return t_render.search(keywords=keywords, content=content,
+                               static_files=DEFAULT_GLOBAL_STATIC_FILES)
+
 
 if __name__ == "__main__":
     # Notice:

@@ -8,6 +8,6 @@ sessions_path = osp.join(PWD, 'sessions')
 templates_path = osp.join(PWD, "templates")
 
 index_page_limit = 50
-search_page_limit = 50
+search_page_limit = 100
 
 use_button_mode_path = True

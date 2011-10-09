@@ -24,7 +24,7 @@ var auto_generate_toc = function() {
     }
 
 
-    $("h1, h2, h3, h4, h5, h6").each(function(i) {
+    $("h2, h3, h4, h5, h6").each(function(i) {
         var cur = $(this);
         cur.attr("id", "title" + i);
     

@@ -4,15 +4,14 @@ import cgi
 import os
 import re
 import shutil
+from functools import wraps
 
 import web
 
 import conf
 from commons import zmarkdown_utils
-from commons import zsh_util
+from commons import zutils
 from commons import zunicode
-
-osp = os.path
 
 
 urls = (
@@ -44,6 +43,22 @@ def session_hook():
 app.add_processor(web.loadhook(session_hook))
 
 
+def limit_ip_test_func(*args, **kwargs):
+    ALLOW_IPS = ("127.0.0.1",)
+    if web.ctx['ip'] not in ALLOW_IPS:
+        return False
+
+    return True
+
+def limit_ip(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if limit_ip_test_func(*args, **kwargs):
+            return f(*args, **kwargs)
+        raise web.forbidden()
+    return wrapper
+
+
 def get_recent_change_list(limit, show_fullpath = True):
     get_rc_list_cmd = " cd %s; find . -name '*.md' | xargs ls -t | head -n %d " % \
                       (conf.pages_path, limit)
@@ -63,11 +78,11 @@ def get_recent_change_list(limit, show_fullpath = True):
 
 def get_page_file_or_dir_fullpath_by_req_path(req_path):
     if not req_path.endswith("/"):
-        return "%s.md" % osp.join(conf.pages_path, req_path)
+        return "%s.md" % os.path.join(conf.pages_path, req_path)
     elif req_path == "/":
         return conf.pages_path
     else:
-        return osp.join(conf.pages_path, req_path)
+        return os.path.join(conf.pages_path, req_path)
 
 def get_page_file_title(req_path):
     """
@@ -75,7 +90,7 @@ def get_page_file_title(req_path):
         'run air application on gentoo'
     """
     fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
-    c = zsh_util.cat(fullpath)
+    c = zutils.cat(fullpath)
 
     p = '^#\s(?P<title>.+?)\s$'
     p_obj = re.compile(p, re.MULTILINE)
@@ -90,15 +105,15 @@ def get_page_file_title(req_path):
     return title
 
 def get_dot_idx_content_by_fullpath(fullpath):
-    dot_idx_fullpath = osp.join(fullpath, ".index.md")
-    return zsh_util.cat(dot_idx_fullpath)
+    dot_idx_fullpath = os.path.join(fullpath, ".index.md")
+    return zutils.cat(dot_idx_fullpath)
 
 
 def get_page_file_list_content_by_fullpath(fullpath, show_fullpath=True):
     req_path = fullpath.replace(conf.pages_path, "")
     req_path = web.utils.strips(req_path, "/")
 
-    tree_cmd = " cd %s; find %s -name '*.md' " % (conf.pages_path, req_path)
+    tree_cmd = " cd %s; find %s -name '*.md' \! -name '.index.md' " % (conf.pages_path, req_path)
     buf = os.popen(tree_cmd).read().strip()
 
     if buf:
@@ -114,11 +129,11 @@ def get_page_file_list_content_by_fullpath(fullpath, show_fullpath=True):
         return sequence_to_unorder_list(lines=lines, strips_seq_item=strips_seq_item)
 
 def delete_page_file_by_fullpath(fullpath):
-    if osp.isfile(fullpath):
+    if os.path.isfile(fullpath):
         os.remove(fullpath)
         return True
-    elif osp.isdir(fullpath):
-        idx_dot_md = osp.join(fullpath, ".index.md")
+    elif os.path.isdir(fullpath):
+        idx_dot_md = os.path.join(fullpath, ".index.md")
         os.remove(idx_dot_md)
         return True
     return False
@@ -150,7 +165,7 @@ def sequence_to_unorder_list(lines, strips_seq_item=None, callable_obj=None):
         if strips_seq_item:
             name = web.utils.strips(name, strips_seq_item)
 
-        url = osp.join("/", name)
+        url = os.path.join("/", name)
         if callable_obj:
             name = apply(callable_obj, (name, ))
         lis.append('- [%s](%s)' % (name, url))
@@ -199,11 +214,11 @@ def search_by_filename_and_file_content(keywords,
                               " awk -F ':' '{print $1}' | uniq | head -n %d " % \
                               (conf.pages_path, find_by_content_matched, limit)
 
-    print "find_by_filename_cmd:"
-    print find_by_filename_cmd
+    # print "find_by_filename_cmd:"
+    # print find_by_filename_cmd
 
-    print "find_by_content_cmd:"
-    print find_by_content_cmd
+    # print "find_by_content_cmd:"
+    # print find_by_content_cmd
 
     matched_content_lines = os.popen(find_by_content_cmd).read().strip()
     matched_content_lines = web.utils.safeunicode(matched_content_lines)
@@ -265,7 +280,7 @@ def _get_trac_wiki_theme():
     css_files = ["trac.css", "wiki.css"]
 
     for i in css_files:
-        filepath = osp.join("/static", "css", i)
+        filepath = os.path.join("/static", "css", i)
         static_files = _append_static_file(static_files, filepath, file_type="css")
 
     return static_files
@@ -275,10 +290,10 @@ def get_global_default_static_files():
 
     css_files = ["main.css"]
     for i in css_files:
-        filepath = osp.join("/static", "css", i)
+        filepath = os.path.join("/static", "css", i)
         static_files = _append_static_file(static_files, filepath, file_type="css")
 
-    filepath = osp.join("/static", "js", "prettify", "prettify.css")
+    filepath = os.path.join("/static", "js", "prettify", "prettify.css")
     static_files = _append_static_file(static_files, filepath, file_type="css")
 
 
@@ -286,11 +301,11 @@ def get_global_default_static_files():
 
 
     js_files = ["jquery.js", "jquery-ui.js",
-                osp.join("prettify", "prettify.js"),
+                os.path.join("prettify", "prettify.js"),
                 "main.js",
                 "Markdown.Converter.js", "Markdown.Sanitizer.js", "Markdown.Editor.js"]
     for i in js_files:
-        filepath = osp.join("/static", "js", i)
+        filepath = os.path.join("/static", "js", i)
         static_files = _append_static_file(static_files, filepath, file_type="js")
 
     return static_files
@@ -300,12 +315,12 @@ def get_the_same_folders_cssjs_files(req_path):
     # NOTICE: this features doesn't works on file system mounted by sshfs.
 
     fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
-    if osp.isfile(fullpath):
-        work_path = osp.dirname(fullpath)
-        static_file_prefix = osp.join("/static/pages", osp.dirname(req_path))
-    elif osp.isdir(fullpath):
+    if os.path.isfile(fullpath):
+        work_path = os.path.dirname(fullpath)
+        static_file_prefix = os.path.join("/static/pages", os.path.dirname(req_path))
+    elif os.path.isdir(fullpath):
         work_path = fullpath
-        static_file_prefix = osp.join("/static/pages", req_path)
+        static_file_prefix = os.path.join("/static/pages", req_path)
     else:
         work_path = conf.pages_path
 
@@ -320,10 +335,10 @@ def get_the_same_folders_cssjs_files(req_path):
     js_buf = ""
     for i in cssjs_files:
         if i.endswith(".css"):
-            filepath = osp.join(static_file_prefix, i)
+            filepath = os.path.join(static_file_prefix, i)
             css_buf = _append_static_file(css_buf, filepath, file_type="css")
         elif i.endswith(".js"):
-            filepath = osp.join(static_file_prefix, i)
+            filepath = os.path.join(static_file_prefix, i)
             js_buf = _append_static_file(js_buf, filepath, file_type="js")
 
     return "%s\n    %s" % (css_buf, js_buf)
@@ -366,14 +381,14 @@ def wp_read(req_path):
     else:
         title = req_path
 
-    if osp.isfile(fullpath):
-        work_fullpath = osp.dirname(fullpath)
-        static_file_prefix = osp.join("/static/pages", osp.dirname(req_path))
+    if os.path.isfile(fullpath):
+        work_fullpath = os.path.dirname(fullpath)
+        static_file_prefix = os.path.join("/static/pages", os.path.dirname(req_path))
         
-        content = zsh_util.cat(fullpath)
-    elif osp.isdir(fullpath):
+        content = zutils.cat(fullpath)
+    elif os.path.isdir(fullpath):
         work_fullpath = fullpath
-        static_file_prefix = osp.join("/static/pages", req_path)
+        static_file_prefix = os.path.join("/static/pages", req_path)
         
         dot_idx_content = get_dot_idx_content_by_fullpath(fullpath)
         page_file_list_content = get_page_file_list_content_by_fullpath(fullpath)
@@ -405,19 +420,19 @@ def wp_edit(req_path):
     else:
         title = req_path    
 
-    if osp.isfile(fullpath):
-        content = zsh_util.cat(fullpath)
-    elif osp.isdir(fullpath):
+    if os.path.isfile(fullpath):
+        content = zutils.cat(fullpath)
+    elif os.path.isdir(fullpath):
         content = get_dot_idx_content_by_fullpath(fullpath)
-    elif not osp.exists(fullpath):
+    elif not os.path.exists(fullpath):
         content = ""
     else:
         raise Exception("unknow path")
 
     static_files = DEFAULT_GLOBAL_STATIC_FILES
-    filepath = osp.join("/static", "css", "pagedown.css")
+    filepath = os.path.join("/static", "css", "pagedown.css")
     static_files = _append_static_file(static_files, filepath, file_type="css", add_newline=True)
-    filepath = osp.join("/static", "js", "editor.js")
+    filepath = os.path.join("/static", "js", "editor.js")
     static_files = _append_static_file(static_files, filepath, file_type="js", add_newline=True)
 
     return t_render.editor(req_path, title, content, static_files=static_files)
@@ -425,7 +440,7 @@ def wp_edit(req_path):
 def wp_rename(req_path):
     fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
     
-    if not osp.exists(fullpath):
+    if not os.path.exists(fullpath):
         raise web.NotFound()
 
     return t_render.rename(req_path, static_files=DEFAULT_GLOBAL_STATIC_FILES)    
@@ -440,6 +455,7 @@ def wp_delete(req_path):
 
 
 class WikiPage:
+    @limit_ip
     def GET(self, req_path):
         req_path = cgi.escape(req_path)
         inputs = web.input()
@@ -462,6 +478,7 @@ class WikiPage:
 
         raise web.BadRequest()
 
+    @limit_ip
     def POST(self, req_path):
         req_path = cgi.escape(req_path)
         inputs = web.input()
@@ -478,16 +495,16 @@ class WikiPage:
 
         fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
 
-        parent = osp.dirname(fullpath)
-        if not osp.exists(parent):
+        parent = os.path.dirname(fullpath)
+        if not os.path.exists(parent):
             os.makedirs(parent)
 
         if action == "edit":
-            if not osp.isdir(fullpath):
-                web.utils.safewrite(fullpath, content)
+            if not os.path.isdir(fullpath):
+                web.utils.safewrite(fullpath, content.replace("\r\n", "\n"))
             else:
-                idx_dot_md_fullpath = osp.join(fullpath, ".index.md")
-                web.utils.safewrite(idx_dot_md_fullpath, content)
+                idx_dot_md_fullpath = os.path.join(fullpath, ".index.md")
+                web.utils.safewrite(idx_dot_md_fullpath, content.replace("\r\n", "\n"))
 
             web.seeother("/%s" % req_path)
         elif action == "rename":
@@ -496,35 +513,36 @@ class WikiPage:
                 raise web.BadRequest()
 
             old_fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
-            if osp.isfile(old_fullpath):
+            if os.path.isfile(old_fullpath):
                 new_fullpath = get_page_file_or_dir_fullpath_by_req_path(new_path)
-            elif osp.isdir(old_fullpath):
-                new_fullpath = osp.join(conf.pages_path, new_path)
+            elif os.path.isdir(old_fullpath):
+                new_fullpath = os.path.join(conf.pages_path, new_path)
             else:
                 raise Exception('unknow path')
 
-            if osp.exists(new_fullpath):
+            if os.path.exists(new_fullpath):
                 err_info = "Warning: The page foobar already exists."
                 return t_render.rename(req_path, err_info, static_files=DEFAULT_GLOBAL_STATIC_FILES)
 
-            parent = osp.dirname(new_fullpath)
-            if not osp.exists(parent):
+            parent = os.path.dirname(new_fullpath)
+            if not os.path.exists(parent):
                 os.makedirs(parent)
 
             shutil.move(old_fullpath, new_fullpath)
 
-            if osp.isfile(new_fullpath):
+            if os.path.isfile(new_fullpath):
                 web.seeother("/%s" % new_path)
-            elif osp.isdir(new_fullpath):
+            elif os.path.isdir(new_fullpath):
                 web.seeother("/%s/" % new_path)
 
             return
 
-        url = osp.join("/", req_path)
+        url = os.path.join("/", req_path)
         web.redirect(url)
 
 
 class SpecialWikiPage:
+    @limit_ip
     def GET(self, req_path):
         f = special_path_mapping.get(req_path)
 
@@ -553,7 +571,7 @@ class SpecialWikiPage:
                                    static_files=static_files)
 
 
-
+    @limit_ip
     def POST(self, req_path):
         f = special_path_mapping.get(req_path)
         inputs = web.input()
@@ -586,10 +604,10 @@ if __name__ == "__main__":
     # Notice:
     # you should remove datas/user.sqlite and sessions/* if you want a clean environment
 
-    if not osp.exists(conf.sessions_path):
+    if not os.path.exists(conf.sessions_path):
         os.mkdir(conf.sessions_path)
 
-    if not osp.exists(conf.pages_path):
+    if not os.path.exists(conf.pages_path):
         os.mkdir(conf.pages_path)
 
     # web.wsgi.runwsgi = lambda func, addr=None: web.wsgi.runfcgi(func, addr)

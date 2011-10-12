@@ -36,6 +36,8 @@ body { background: #fff; color: #000; margin: 10px; padding: 0; }
 body, th, tr {
  font: normal 13px Verdana,Arial,'Bitstream Vera Sans',Helvetica,sans-serif;
 }
+
+/*
 h1, h2, h3, h4 {
  font-family: Arial,Verdana,'Bitstream Vera Sans',Helvetica,sans-serif;
  font-weight: bold;
@@ -45,6 +47,8 @@ h1, h2, h3, h4 {
 h1 { font-size: 19px; margin: .15em 1em 0.5em 0 }
 h2 { font-size: 16px }
 h3 { font-size: 14px }
+*/
+
 hr { border: none;  border-top: 1px solid #ccb; margin: 2em 0 }
 address { font-style: normal }
 img { border: none }

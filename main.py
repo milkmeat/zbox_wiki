@@ -288,7 +288,7 @@ def _get_trac_wiki_theme():
 def get_global_default_static_files():
     static_files = _get_trac_wiki_theme()
 
-    css_files = ["main.css"]
+    css_files = ("main.css", "safari_reader.css")
     for i in css_files:
         filepath = os.path.join("/static", "css", i)
         static_files = _append_static_file(static_files, filepath, file_type="css")
@@ -300,10 +300,10 @@ def get_global_default_static_files():
     static_files = "%s\n" % static_files
 
 
-    js_files = ["jquery.js", "jquery-ui.js",
+    js_files = ("jquery.js", "jquery-ui.js",
                 os.path.join("prettify", "prettify.js"),
                 "main.js",
-                "Markdown.Converter.js", "Markdown.Sanitizer.js", "Markdown.Editor.js"]
+                "Markdown.Converter.js", "Markdown.Sanitizer.js", "Markdown.Editor.js")
     for i in js_files:
         filepath = os.path.join("/static", "js", i)
         static_files = _append_static_file(static_files, filepath, file_type="js")
@@ -430,8 +430,11 @@ def wp_edit(req_path):
         raise Exception("unknow path")
 
     static_files = DEFAULT_GLOBAL_STATIC_FILES
+
+    # Editor style
     filepath = os.path.join("/static", "css", "pagedown.css")
     static_files = _append_static_file(static_files, filepath, file_type="css", add_newline=True)
+    
     filepath = os.path.join("/static", "js", "editor.js")
     static_files = _append_static_file(static_files, filepath, file_type="js", add_newline=True)
 

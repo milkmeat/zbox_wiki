@@ -285,31 +285,46 @@ def _get_trac_wiki_theme():
 
     return static_files
 
-def get_global_default_static_files():
+def get_global_static_files(show_toc = conf.show_toc, show_highlight = conf.show_highlight):
     static_files = _get_trac_wiki_theme()
 
     css_files = ("main.css", "safari_reader.css")
     for i in css_files:
-        filepath = os.path.join("/static", "css", i)
-        static_files = _append_static_file(static_files, filepath, file_type="css")
+        path = os.path.join("/static", "css", i)
+        static_files = _append_static_file(static_files, path, file_type="css")
+        
+    if show_toc:
+        path = os.path.join("/static", "css", "toc.css")
+        static_files = _append_static_file(static_files, path, file_type="css")    
 
-    filepath = os.path.join("/static", "js", "prettify", "prettify.css")
-    static_files = _append_static_file(static_files, filepath, file_type="css")
+    if show_highlight:
+        path = os.path.join("/static", "js", "prettify", "prettify.css")
+        static_files = _append_static_file(static_files, path, file_type="css")
 
 
     static_files = "%s\n" % static_files
 
 
-    js_files = ("jquery.js", "jquery-ui.js",
-                os.path.join("prettify", "prettify.js"),
+    js_files = ("jquery.js",
+                "jquery-ui.js",
                 "main.js",
                 "Markdown.Converter.js", "Markdown.Sanitizer.js", "Markdown.Editor.js")
     for i in js_files:
-        filepath = os.path.join("/static", "js", i)
-        static_files = _append_static_file(static_files, filepath, file_type="js")
+        path = os.path.join("/static", "js", i)
+        static_files = _append_static_file(static_files, path, file_type="js")
+
+    if show_toc:
+        path = os.path.join("/static", "js", "toc.js")
+        static_files = _append_static_file(static_files, path, file_type="js")
+
+    if show_highlight:
+        js_files = (os.path.join("prettify", "prettify.js"),
+                    "highlight.js")
+        for i in js_files:
+            path = os.path.join("/static", "js", i)
+            static_files = _append_static_file(static_files, path, file_type="js")        
 
     return static_files
-DEFAULT_GLOBAL_STATIC_FILES = get_global_default_static_files()
 
 def get_the_same_folders_cssjs_files(req_path):
     # NOTICE: this features doesn't works on file system mounted by sshfs.
@@ -335,11 +350,11 @@ def get_the_same_folders_cssjs_files(req_path):
     js_buf = ""
     for i in cssjs_files:
         if i.endswith(".css"):
-            filepath = os.path.join(static_file_prefix, i)
-            css_buf = _append_static_file(css_buf, filepath, file_type="css")
+            path = os.path.join(static_file_prefix, i)
+            css_buf = _append_static_file(css_buf, path, file_type="css")
         elif i.endswith(".js"):
-            filepath = os.path.join(static_file_prefix, i)
-            js_buf = _append_static_file(js_buf, filepath, file_type="js")
+            path = os.path.join(static_file_prefix, i)
+            js_buf = _append_static_file(js_buf, path, file_type="js")
 
     return "%s\n    %s" % (css_buf, js_buf)
 
@@ -366,7 +381,7 @@ def wp_read_recent_change():
                                        work_fullpath=fullpath,
                                        static_file_prefix=static_file_prefix)
 
-    static_files = DEFAULT_GLOBAL_STATIC_FILES
+    static_files = get_global_static_files()
     # static_files = "%s\n    %s" % (static_files, get_the_same_folders_cssjs_files(req_path))
 
     return t_render.canvas(req_path=req_path, title=title, content=content, toolbox=False,
@@ -413,7 +428,7 @@ def wp_read(req_path):
                                        work_fullpath=work_fullpath,
                                        static_file_prefix=static_file_prefix)
 
-    static_files = DEFAULT_GLOBAL_STATIC_FILES
+    static_files = get_global_static_files()
     static_files = "%s\n    %s" % (static_files, get_the_same_folders_cssjs_files(req_path))
 
     return t_render.canvas(req_path=req_path, title=title, content=content, static_files=static_files)
@@ -436,14 +451,14 @@ def wp_edit(req_path):
     else:
         raise Exception("unknow path")
 
-    static_files = DEFAULT_GLOBAL_STATIC_FILES
+    static_files = get_global_static_files()
 
-    # Editor style
-    filepath = os.path.join("/static", "css", "pagedown.css")
-    static_files = _append_static_file(static_files, filepath, file_type="css", add_newline=True)
+    # Markdown editor style
+    path = os.path.join("/static", "css", "pagedown.css")
+    static_files = _append_static_file(static_files, path, file_type="css", add_newline=True)
     
-    filepath = os.path.join("/static", "js", "editor.js")
-    static_files = _append_static_file(static_files, filepath, file_type="js", add_newline=True)
+    path = os.path.join("/static", "js", "editor.js")
+    static_files = _append_static_file(static_files, path, file_type="js", add_newline=True)
 
     return t_render.editor(req_path, title, content, static_files=static_files)
 
@@ -453,7 +468,7 @@ def wp_rename(req_path):
     if not os.path.exists(fullpath):
         raise web.NotFound()
 
-    return t_render.rename(req_path, static_files=DEFAULT_GLOBAL_STATIC_FILES)    
+    return t_render.rename(req_path, static_files = get_global_static_files())    
 
 def wp_delete(req_path):
     fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
@@ -532,7 +547,7 @@ class WikiPage:
 
             if os.path.exists(new_fullpath):
                 err_info = "Warning: The page foobar already exists."
-                return t_render.rename(req_path, err_info, static_files=DEFAULT_GLOBAL_STATIC_FILES)
+                return t_render.rename(req_path, err_info, static_files = get_global_static_files())
 
             parent = os.path.dirname(new_fullpath)
             if not os.path.exists(parent):
@@ -574,7 +589,7 @@ class SpecialWikiPage:
             content = get_page_file_index(limit=limit, show_fullpath=show_fullpath)
             content = zmarkdown_utils.markdown(content)
 
-            static_files = DEFAULT_GLOBAL_STATIC_FILES
+            static_files = get_global_static_files()
             static_files = "%s\n    %s" % (static_files, get_the_same_folders_cssjs_files(req_path))
 
             req_path = "~index"
@@ -608,8 +623,8 @@ class SpecialWikiPage:
         else:
             content = "not found matched"
 
-        return t_render.search(keywords=keywords, content=content,
-                               static_files=DEFAULT_GLOBAL_STATIC_FILES)
+        return t_render.search(keywords = keywords, content = content,
+                               static_files = get_global_static_files())
 
 
 if __name__ == "__main__":

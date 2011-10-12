@@ -11,5 +11,7 @@ index_page_limit = 50
 search_page_limit = 100
 
 show_fullpath = False
+show_toc = True
+show_highlight = True
 
 use_button_mode_path = True

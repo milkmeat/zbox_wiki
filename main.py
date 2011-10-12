@@ -59,7 +59,7 @@ def limit_ip(f):
     return wrapper
 
 
-def get_recent_change_list(limit, show_fullpath = True):
+def get_recent_change_list(limit, show_fullpath = conf.show_fullpath):
     get_rc_list_cmd = " cd %s; find . -name '*.md' | xargs ls -t | head -n %d " % \
                       (conf.pages_path, limit)
     buf = os.popen(get_rc_list_cmd).read().strip()
@@ -109,7 +109,7 @@ def get_dot_idx_content_by_fullpath(fullpath):
     return zutils.cat(dot_idx_fullpath)
 
 
-def get_page_file_list_content_by_fullpath(fullpath, show_fullpath=True):
+def get_page_file_list_content_by_fullpath(fullpath, show_fullpath = conf.show_fullpath):
     req_path = fullpath.replace(conf.pages_path, "")
     req_path = web.utils.strips(req_path, "/")
 
@@ -126,7 +126,7 @@ def get_page_file_list_content_by_fullpath(fullpath, show_fullpath=True):
         else:
             callable_obj = get_page_file_title
 
-        return sequence_to_unorder_list(lines=lines, strips_seq_item=strips_seq_item)
+        return sequence_to_unorder_list(lines=lines, strips_seq_item=".md", callable_obj=callable_obj)
 
 def delete_page_file_by_fullpath(fullpath):
     if os.path.isfile(fullpath):
@@ -138,7 +138,7 @@ def delete_page_file_by_fullpath(fullpath):
         return True
     return False
 
-def get_page_file_index(limit=conf.index_page_limit, show_fullpath = True):
+def get_page_file_index(limit=conf.index_page_limit, show_fullpath = conf.show_fullpath):
     get_page_file_index_cmd = " cd %s; find . -name '*.md' | head -n %d " % (conf.pages_path, limit)
     buf = os.popen(get_page_file_index_cmd).read().strip()
     if buf:
@@ -177,7 +177,7 @@ def sequence_to_unorder_list(lines, strips_seq_item=None, callable_obj=None):
 
 def search_by_filename_and_file_content(keywords,
                                         limit = conf.search_page_limit,
-                                        show_fullpath = True):
+                                        show_fullpath = conf.show_fullpath):
     """
     Following doesn't works if cmd contains pipe character:
 
@@ -373,6 +373,12 @@ def wp_read_recent_change():
                            static_files = static_files)
 
 def wp_read(req_path):
+    inputs = web.input()
+
+    show_fullpath = inputs.get("show_fullpath", True)
+    if show_fullpath == "0":
+        show_fullpath = False
+        
     fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
 
     if conf.use_button_mode_path:
@@ -391,7 +397,8 @@ def wp_read(req_path):
         static_file_prefix = os.path.join("/static/pages", req_path)
         
         dot_idx_content = get_dot_idx_content_by_fullpath(fullpath)
-        page_file_list_content = get_page_file_list_content_by_fullpath(fullpath)
+        page_file_list_content = get_page_file_list_content_by_fullpath(fullpath,
+                                                                        show_fullpath=show_fullpath)
         content = ""
 
         if dot_idx_content:

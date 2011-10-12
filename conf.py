@@ -10,6 +10,6 @@ templates_path = osp.join(PWD, "templates")
 index_page_limit = 50
 search_page_limit = 100
 
-show_fullpath = True
+show_fullpath = False
 
 use_button_mode_path = True

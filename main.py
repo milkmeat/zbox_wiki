@@ -347,7 +347,7 @@ def wp_read_recent_change():
     inputs = web.input()
     limit = inputs.get("limit")
 
-    show_fullpath = inputs.get("show_fullpath", True)
+    show_fullpath = inputs.get("show_fullpath") or conf.show_fullpath
     if show_fullpath == "0":
         show_fullpath = False
 
@@ -560,9 +560,11 @@ class SpecialWikiPage:
             raise web.NotFound()
 
         inputs = web.input()
-        show_fullpath = inputs.get("show_fullpath", True)
+        show_fullpath = inputs.get("show_fullpath") or conf.show_fullpath
         if show_fullpath == "0":
             show_fullpath = False
+
+        print "show_fullpath:", show_fullpath
 
         limit = inputs.get("limit", conf.index_page_limit)
         if limit:

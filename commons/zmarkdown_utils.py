@@ -8,9 +8,9 @@ Trac - Syntax Coloring of Source Code
 import os
 import re
 
-import web
 from markdown import markdown as _markdown
-from zlatex import latex2png
+import markdown_plus
+import zlatex
 from zpath import convert_path_to_hierarchy
 
 osp = os.path
@@ -48,7 +48,7 @@ def convert_latex_code(text, save_to_prefix):
 
     def code_repl(match_obj):
         code = match_obj.group('code')
-        png_filename = latex2png(text=code, save_to_prefix=save_to_prefix)
+        png_filename = zlatex.latex2png(text=code, save_to_prefix=save_to_prefix)
 
         return "![%s](%s)" % (png_filename, png_filename)
 
@@ -67,7 +67,7 @@ def convert_latex_code(text, save_to_prefix):
 
 #     def code_repl(match_obj):
 #         code = match_obj.group('code')
-#         png_filename = latex2png(text=code, save_to_prefix=save_to_prefix)
+#         png_filename = zlatex.latex2png(text=code, save_to_prefix=save_to_prefix)
 
 #         fullpath = osp.join(save_to_prefix, i)
 #         os.remove(fullpath)
@@ -142,13 +142,15 @@ def markdown(text, work_fullpath = None, static_file_prefix = None):
     if work_fullpath:
         try:
             text = convert_latex_code(text, save_to_prefix=work_fullpath)
-        except:
+        except Exception:
             print "it seems that latex or dvipng doesn't works well on your box"
 
     if static_file_prefix:
         text = convert_static_file_url(text, static_file_prefix)
 
     text = trac_wiki_code_block_to_markdown_code(text)
+
+    text = markdown_plus.parse_table(text)
 
     return _markdown(text)
 

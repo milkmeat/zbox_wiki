@@ -22,3 +22,9 @@ pre {
     overflow: auto;
     padding: 0.25em;
 }
+
+/* fix table border */
+th, td {
+    border : 1px solid #ccc;
+    padding : 5px;
+}

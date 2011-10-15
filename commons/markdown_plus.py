@@ -26,17 +26,24 @@ import re
 
 
 def escape_table_special_chars(text):
+#    return text
     escape_p = "!\|"
     p_obj = re.compile(escape_p, re.UNICODE)
-    return p_obj.sub('\v', text)
+    return p_obj.sub('\v\f', text)
 
 def unescape_table_special_chars(text):
-    return text.replace("\v", "|")
+#    return text
+    return text.replace("\v\f", "|")
 
 
 def match_table(line):
+    if not line:
+        return False
+    
     t_p = "^\|{1,2} (.+?) \|{1,2}$"
-    if re.match(t_p, line) and line.count('|') >= 2:
+    p_obj = re.compile(t_p, re.UNICODE)
+
+    if p_obj.match(line) and line.count('|') >= 2:
         return True
     else:
         return False
@@ -65,6 +72,14 @@ def parse_cells(line):
 
     return line
 
+
+"""
+|      \what is\| tbl beginning   | tbl body        | tbl ending      |
+| previous line | None            | ?               | ?               |
+| current line  | startswith('|') | startswith('|') | startswith('|') | 
+| next line     | ?               | ?               | None            |
+"""
+
 def parse_table(text):
     text = escape_table_special_chars(text)
     resp = []
@@ -73,41 +88,41 @@ def parse_table(text):
     total_lines = len(lines)
 
     for i in xrange(total_lines):
-        last_line = None
+        prev_line = None
         curr_line = lines[i]
         next_line = None
 
         is_first_line = i == 0
         if not is_first_line:
-            last_line = lines[i - 1]
+            prev_line = lines[i - 1]
 
         is_latest_line = (i + 1) == total_lines
         if not is_latest_line:
             next_line = lines[i + 1]
 
 
-        last_line_of_table_beginning = (not match_table(curr_line)) and next_line and match_table(next_line)
-        next_line_of_table_ending = match_table(curr_line) and next_line and (not match_table(next_line))
-        is_table_beginning = last_line is '' and match_table(curr_line) and (curr_line.count('||') >= 2)
+        is_first_line_of_table = match_table(curr_line) and (not prev_line) and (curr_line.count('||') >= 2)
+        is_latest_line_of_table = match_table(curr_line) and (not next_line)
 
-        if last_line_of_table_beginning:
+        if is_first_line_of_table:
             resp.append("")
             resp.append("<table>")
 
-        elif next_line_of_table_ending:
-            resp.append("")
-            resp.append("</table>")
-
-        elif is_table_beginning:
             resp.append("<tr>")
             resp.append(parse_cells(curr_line))
             resp.append("</tr>")
+
+        elif is_latest_line_of_table:
+            resp.append("<tr>")
+            resp.append(parse_cells(curr_line))
+            resp.append("</tr>")
+
+            resp.append("</table>")
 
         elif match_table(curr_line):
             resp.append("<tr>")
             resp.append(parse_cells(curr_line))
             resp.append("</tr>")
-
         else:
             resp.append(curr_line)
 

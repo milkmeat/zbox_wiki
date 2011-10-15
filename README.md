@@ -24,7 +24,7 @@ Visit http://localhost:8080 .
 
 - it really works
 - run up without database, CRUD page file
-- support [Markdown](http://daringfireball.net/projects/markdown/) syntax
+- support [Markdown](http://daringfireball.net/projects/markdown/) (with table parsing extension) syntax
 - auto include static image file
 - auto generate table of content
 - list all page files (implement in GNU findutils)
@@ -59,21 +59,21 @@ Visit http://localhost:8080 .
 
 Auto generate table of content and highlight
 
-![snapshot of ZWiki](http://s3.amazonaws.com/imgly_production/2137451/large.png "ZWiki - auto generate table of
+![snapshot of ZWiki](http://img3.douban.com/view/photo/photo/public/p1255546232.jpg "ZWiki - auto generate table of
  content and highlight")
 
 
 List page files in tree
 
-![snapshot of ZWiki](http://s3.amazonaws.com/imgly_production/2137458/large.png "ZWiki - list page files in tree")
+![snapshot of ZWiki](http://img3.douban.com/view/photo/photo/public/p1255546341.jpg "ZWiki - list page files in tree")
 
 
 Simple search
 
-![snapshot of ZWiki](http://s3.amazonaws.com/imgly_production/2137480/large.png "ZWiki - simple search")
+![snapshot of ZWiki](http://img3.douban.com/view/photo/photo/public/p1255546389.jpg "ZWiki - simple search")
 
 
 Button-mode path
 
-![snapshot of ZWiki](http://s3.amazonaws.com/twitpic/photos/full/415439813.png?AWSAccessKeyId=AKIAJF3XCCKACR3QDMOA&Expires=1317796035&Signature=XppMHQIjCMPYvuEIMrLGoGWGxOQ%3D "ZWiki - button-mode path")
+![snapshot of ZWiki](http://img3.douban.com/view/photo/photo/public/p1255546298.jpg "ZWiki - button-mode path")
 

@@ -285,14 +285,20 @@ def _get_trac_wiki_theme():
 
     return static_files
 
-def get_global_static_files(show_toc = conf.show_toc, show_highlight = conf.show_highlight):
+def get_global_static_files(show_toc = conf.show_toc,
+                            show_highlight = conf.show_highlight,
+                            enable_safari_reader_mode = conf.enable_safari_reader_mode):
     static_files = _get_trac_wiki_theme()
 
-    css_files = ("main.css", "safari_reader.css")
+    css_files = ("main.css",)
     for i in css_files:
         path = os.path.join("/static", "css", i)
         static_files = _append_static_file(static_files, path, file_type="css")
-        
+
+    if enable_safari_reader_mode:
+        path = os.path.join("/static", "css", "safari_reader.css")
+        static_files = _append_static_file(static_files, path, file_type="css")
+
     if show_toc:
         path = os.path.join("/static", "css", "toc.css")
         static_files = _append_static_file(static_files, path, file_type="css")    
@@ -396,7 +402,7 @@ def wp_read(req_path):
         
     fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
 
-    if conf.use_button_mode_path:
+    if conf.enable_button_mode_path:
         buf = zmarkdown_utils.convert_text_path_to_button_path("/%s" % req_path)
         title = zmarkdown_utils.markdown(buf)
     else:
@@ -436,7 +442,7 @@ def wp_read(req_path):
 def wp_edit(req_path):
     fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
 
-    if conf.use_button_mode_path:
+    if conf.enable_button_mode_path:
         buf = zmarkdown_utils.convert_text_path_to_button_path("/%s" % req_path)
         title = zmarkdown_utils.markdown(buf)
     else:

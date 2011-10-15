@@ -14,4 +14,7 @@ show_fullpath = False
 show_toc = True
 show_highlight = True
 
-use_button_mode_path = True
+enable_button_mode_path = True
+enable_safari_reader_mode = True
+
+

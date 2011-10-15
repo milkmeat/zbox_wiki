@@ -26,21 +26,19 @@ import re
 
 
 def escape_table_special_chars(text):
-#    return text
     escape_p = "!\|"
     p_obj = re.compile(escape_p, re.UNICODE)
     return p_obj.sub('\v\f', text)
 
 def unescape_table_special_chars(text):
-#    return text
     return text.replace("\v\f", "|")
 
 
 def match_table(line):
     if not line:
         return False
-    
-    t_p = "^\|{1,2} (.+?) \|{1,2}$"
+
+    t_p = "^\|{1,2} (?P<cells>.+?) \|{1,2}(?:[ ]*)$"
     p_obj = re.compile(t_p, re.UNICODE)
 
     if p_obj.match(line) and line.count('|') >= 2:
@@ -49,7 +47,7 @@ def match_table(line):
         return False
 
 def parse_cells(line):
-    cells_p = "^(?P<splitter>\|){1,2} (?P<cells>.+?) \|{1,2}$"
+    cells_p = "^(?P<splitter>\|){1,2} (?P<cells>.+?) \|{1,2}(?:[ ]*)$"
     p_obj = re.compile(cells_p, re.UNICODE)
     m_obj = p_obj.match(line)
 
@@ -62,30 +60,35 @@ def parse_cells(line):
 
         is_table_header = line.startswith("||")
         if not is_table_header:
+            total_columns = line.count(" |") + 1
             buf = " </td> <td> ".join(cells)
             buf = "    <td> %s </td>" % buf
         else:
+            total_columns = line.count(" ||") + 1
             buf = " </th> <th> ".join(cells)
             buf = "    <th> %s </th>" % buf
 
-        return buf
+        return total_columns, buf
 
-    return line
+    return None, line
 
 
 """
-|      \what is\| tbl beginning   | tbl body        | tbl ending      |
-| previous line | None            | ?               | ?               |
-| current line  | startswith('|') | startswith('|') | startswith('|') | 
-| next line     | ?               | ?               | None            |
-"""
+Parsing Rules
 
+||      \what is\ || tbl beginning   || tbl body        || tbl ending      ||
+|  previous line  |  None            |  ?               |  ?               |
+|  current line   |  startswith('|') |  startswith('|') |  startswith('|') |
+|  next line      |  ?               |  ?               |  None            |
+"""
 def parse_table(text):
     text = escape_table_special_chars(text)
     resp = []
 
     lines = text.split("\n")
     total_lines = len(lines)
+    
+    total_columns = None
 
     for i in xrange(total_lines):
         prev_line = None
@@ -105,24 +108,39 @@ def parse_table(text):
         is_latest_line_of_table = match_table(curr_line) and (not next_line)
 
         if is_first_line_of_table:
-            resp.append("")
             resp.append("<table>")
 
             resp.append("<tr>")
-            resp.append(parse_cells(curr_line))
+            curr_total_columns, buf = parse_cells(curr_line)
+            total_columns = curr_total_columns
+            resp.append(buf)
             resp.append("</tr>")
 
         elif is_latest_line_of_table:
             resp.append("<tr>")
-            resp.append(parse_cells(curr_line))
-            resp.append("</tr>")
 
+            curr_total_columns, buf = parse_cells(curr_line)
+            resp.append(buf)
+
+            if total_columns and curr_total_columns < total_columns:
+                buf = "<td>&nbsp;</td>" * (total_columns - curr_total_columns)
+                resp.append(buf)
+
+            resp.append("</tr>")
             resp.append("</table>")
 
         elif match_table(curr_line):
             resp.append("<tr>")
-            resp.append(parse_cells(curr_line))
+            
+            curr_total_columns, buf = parse_cells(curr_line)
+            resp.append(buf)
+
+            if total_columns and curr_total_columns < total_columns:
+                buf = "<td>&nbsp;</td>" * (total_columns - curr_total_columns)
+                resp.append(buf)
+
             resp.append("</tr>")
+            
         else:
             resp.append(curr_line)
 
@@ -130,4 +148,3 @@ def parse_table(text):
     buf = unescape_table_special_chars(buf)
     
     return buf
-

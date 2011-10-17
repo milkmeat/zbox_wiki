@@ -42,11 +42,13 @@ def session_hook():
     web.template.Template.globals['session'] = session
 app.add_processor(web.loadhook(session_hook))
 
+def get_lan_ip_addr():
+    return socket.gethostbyname(socket.gethostname())
 
 def limit_ip_test_func(*args, **kwargs):
-    ALLOW_IPS = ("127.0.0.1",)
-    if web.ctx['ip'] not in ALLOW_IPS:
-        return False
+    # ALLOW_IPS = ("127.0.0.1", )
+    # if web.ctx['ip'] not in ALLOW_IPS:
+    #     return False
 
     return True
 
@@ -642,6 +644,10 @@ if __name__ == "__main__":
 
     if not os.path.exists(conf.pages_path):
         os.mkdir(conf.pages_path)
+
+    import sys
+    sys.stderr = file(conf.error_log, "a")    
+    sys.stdout = file(conf.info_log, "a")
 
     # web.wsgi.runwsgi = lambda func, addr=None: web.wsgi.runfcgi(func, addr)
     app.run()

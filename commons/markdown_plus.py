@@ -22,7 +22,9 @@ will be:
 
 """
 
+import markdown
 import re
+import web.utils
 
 
 def escape_table_special_chars(text):
@@ -53,6 +55,10 @@ def parse_cells(line):
 
     if m_obj:
         cells = m_obj.group('cells')
+
+        cells = web.utils.strips(markdown.markdown(cells), "<p>")
+        cells = web.utils.strips(cells, "</p>")        
+        
         splitter = m_obj.group('splitter')
         cells = [cell.strip()
                 for cell in cells.split(splitter)
@@ -87,7 +93,7 @@ def parse_table(text):
 
     lines = text.split("\n")
     total_lines = len(lines)
-    
+
     total_columns = None
 
     for i in xrange(total_lines):
@@ -131,7 +137,7 @@ def parse_table(text):
 
         elif match_table(curr_line):
             resp.append("<tr>")
-            
+
             curr_total_columns, buf = parse_cells(curr_line)
             resp.append(buf)
 
@@ -140,11 +146,11 @@ def parse_table(text):
                 resp.append(buf)
 
             resp.append("</tr>")
-            
+
         else:
             resp.append(curr_line)
 
     buf = "\n".join(resp)
     buf = unescape_table_special_chars(buf)
-    
+
     return buf

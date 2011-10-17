@@ -17,4 +17,5 @@ show_highlight = True
 enable_button_mode_path = True
 enable_safari_reader_mode = True
 
-
+error_log = os.path.join(PWD, "error_log.txt")
+info_log = os.path.join(PWD, "info_log.txt")

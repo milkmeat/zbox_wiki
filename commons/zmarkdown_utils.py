@@ -125,7 +125,7 @@ def convert_static_file_url(text, static_file_prefix):
 
 def convert_text_path_to_button_path(path):
     buf = convert_path_to_hierarchy(path)
-    IS_ONLY_ONE_LEVEL = len(buf) == 1    
+    IS_ONLY_ONE_LEVEL = len(buf) == 1
     button_path = " / ".join(["[%s](%s/)" % (i[0], i[1]) for i in buf[:-1]])
 
     latest_level = buf[-1]
@@ -139,20 +139,24 @@ def convert_text_path_to_button_path(path):
     return button_path
 
 def markdown(text, work_fullpath = None, static_file_prefix = None):
+    buf = text    
+    
     if work_fullpath:
         try:
-            text = convert_latex_code(text, save_to_prefix=work_fullpath)
+            buf = convert_latex_code(buf, save_to_prefix=work_fullpath)
         except Exception:
             print "it seems that latex or dvipng doesn't works well on your box"
 
     if static_file_prefix:
-        text = convert_static_file_url(text, static_file_prefix)
+        buf = convert_static_file_url(buf, static_file_prefix)
 
-    text = trac_wiki_code_block_to_markdown_code(text)
 
-    text = markdown_plus.parse_table(text)
+    buf = markdown_plus.parse_table(buf)    
+    buf = trac_wiki_code_block_to_markdown_code(buf)
 
-    return _markdown(text)
+    buf = _markdown(buf)
+    
+    return buf
 
 if __name__ == "__main__":
     import doctest

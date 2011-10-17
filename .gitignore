@@ -16,3 +16,5 @@ docs/*.html
 scripts/conf.py
 t.py
 experimental/migrate_from_trac_wiki_to_zwiki_conf.py
+error_log.txt
+info_log.txt

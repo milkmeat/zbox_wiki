@@ -12,6 +12,7 @@ import conf
 from commons import zmarkdown_utils
 from commons import zutils
 from commons import zunicode
+from commons import netutils
 
 
 urls = (
@@ -42,14 +43,15 @@ def session_hook():
     web.template.Template.globals['session'] = session
 app.add_processor(web.loadhook(session_hook))
 
-def get_lan_ip_addr():
-    return socket.gethostbyname(socket.gethostname())
 
 def limit_ip_test_func(*args, **kwargs):
-    # ALLOW_IPS = ("127.0.0.1", )
-    # if web.ctx['ip'] not in ALLOW_IPS:
-    #     return False
-
+    # allow_ips = ("192.168.0.10", )
+    allow_ips = None
+    remote_ip = web.ctx['ip']
+    
+    if not netutils.ip_in_network_ranges(remote_ip, allow_ips):
+        return False
+    
     return True
 
 def limit_ip(f):
@@ -645,9 +647,9 @@ if __name__ == "__main__":
     if not os.path.exists(conf.pages_path):
         os.mkdir(conf.pages_path)
 
-    import sys
-    sys.stderr = file(conf.error_log, "a")    
-    sys.stdout = file(conf.info_log, "a")
+    # import sys
+    # sys.stderr = file(conf.error_log, "a")    
+    # sys.stdout = file(conf.info_log, "a")
 
     # web.wsgi.runwsgi = lambda func, addr=None: web.wsgi.runfcgi(func, addr)
     app.run()

@@ -32,6 +32,7 @@ Visit http://localhost:8080 .
 - search by file name and file content (implment in GNU findutils and GNU grep)
 - support simple LaTeX
 - support button mode path
+- IP/network range access restriction
 
 ## RUNTIME REQUIREMENTS
 

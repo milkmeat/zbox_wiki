@@ -38,3 +38,15 @@ table  {
     margin-top: 20px;
 }
     
+
+blockquote { 
+    margin: -0.6em 0;
+    border-style: solid; 
+    border-width: 0 0 0 2px; 
+    padding-left: 2em;
+    border-color: #b44; 
+    margin-left: 1em;
+}
+/* .citation blockquote.citation { border-color: #4b4; } */
+/* .citation .citation blockquote.citation { border-color: #44b; } */
+/* .citation .citation .citation blockquote.citation { border-color: #c55; } */

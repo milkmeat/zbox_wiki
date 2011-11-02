@@ -1,16 +1,68 @@
 #!/usr/bin/env python
-import pdb
-import socket
+"""
+This script could use to
+
+- get one or all network interface MAC address
+- valid IP if in a network range
+
+"""
+import fcntl
+import os
 import platform
+import socket
+import struct
+import uuid
 import web
 
-# http://en.wikipedia.org/wiki/IP_address
+__all__ = [
+    "get_mac_addr_by_if_name",
+    "get_mac_addr",
+    "get_mac_addrs_on_mac",
 
-__all__ = ['IANA_RESERVED_NETWORK_RANGES',
-           'get_lan_ip',
-           'get_default_network_range',
-           'ip_in_network_range', 'ip_in_network_ranges',
-           ]
+    'IANA_RESERVED_NETWORK_RANGES',
+    'get_lan_ip',
+    'get_default_network_range',
+    'ip_in_network_range', 'ip_in_network_ranges',
+]
+
+def _get_mac_addr_on_linux(ifname = "eth0"):
+    s = socket.socket()
+    info = fcntl.ioctl(s.fileno(), 0x8927,  struct.pack('256s', ifname[:15]))
+    buf = ''.join(['%02x:' % ord(char) for char in info[18:24]])[:-1]
+    return buf
+
+def _get_mac_addr_on_mac(hardware_port = "Ethernet"):
+    get_mac_addr_cmd = "networksetup -getmacaddress %s | awk '{print $3}'" % hardware_port
+    resp = os.popen(get_mac_addr_cmd).read().strip()
+    return resp
+
+def get_mac_addr_by_if_name(if_name):
+    pl_name = platform.system()
+    if pl_name == "Darwin":
+        return get_mac_addr_on_mac(if_name)
+    elif pl_name == "Linux":
+        return get_mac_addr_on_linux(if_name)
+
+def get_mac_addr():
+    """ Return the first network interface MAC address.
+
+    http://stackoverflow.com/questions/159137/getting-mac-address
+
+    Test environment:
+        - Linux 2.6.39.1-x86_64
+        - Darwin 10.8.0
+    """
+    resp = hex(uuid.getnode())[2:14]
+    buf = [resp[i : i + 2] for i in xrange(0, len(resp), 2)]
+    return ":".join(buf)
+
+def get_mac_addrs_on_mac():
+    get_mac_addrs_cmd = "networksetup -listallhardwareports | grep 'Ethernet Address' | grep -v 'N/A' | awk '{print $3}'"
+    resp = os.popen(get_mac_addrs_cmd).read().strip().split('\n')
+    return resp
+
+
+# http://en.wikipedia.org/wiki/IP_address
 
 IANA_RESERVED_NETWORK_RANGES = ("10.0.0.0/24", "172.16.0.0/20", "192.168.0.0/16")
 

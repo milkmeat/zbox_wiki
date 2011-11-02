@@ -14,6 +14,10 @@ from commons import zutils
 from commons import zunicode
 from commons import netutils
 
+__all__ = [
+    'limit_ip',
+    'get_global_static_files',
+]
 
 urls = (
     '/~([a-zA-Z0-9_\-/.]+)', 'SpecialWikiPage',
@@ -291,7 +295,8 @@ def _get_trac_wiki_theme():
 
 def get_global_static_files(show_toc = conf.show_toc,
                             show_highlight = conf.show_highlight,
-                            enable_safari_reader_mode = conf.enable_safari_reader_mode):
+                            enable_safari_reader_mode = conf.enable_safari_reader_mode,
+                            use_markdown_ide = conf.use_markdown_ide):
     static_files = _get_trac_wiki_theme()
 
     css_files = ("main.css",)
@@ -315,13 +320,17 @@ def get_global_static_files(show_toc = conf.show_toc,
     static_files = "%s\n" % static_files
 
 
-    js_files = ("jquery.js",
-                "jquery-ui.js",
-                "main.js",
-                "Markdown.Converter.js", "Markdown.Sanitizer.js", "Markdown.Editor.js")
+    js_files = ("jquery.js", "jquery-ui.js", "main.js")
     for i in js_files:
         path = os.path.join("/static", "js", i)
         static_files = _append_static_file(static_files, path, file_type="js")
+
+    if use_markdown_ide:
+        js_files = ("Markdown.Converter.js", "Markdown.Sanitizer.js", "Markdown.Editor.js")
+        for i in js_files:
+            path = os.path.join("/static", "js", i)
+            static_files = _append_static_file(static_files, path, file_type="js")
+
 
     if show_toc:
         path = os.path.join("/static", "js", "toc.js")
@@ -647,9 +656,9 @@ if __name__ == "__main__":
     if not os.path.exists(conf.pages_path):
         os.mkdir(conf.pages_path)
 
-    # import sys
-    # sys.stderr = file(conf.error_log, "a")    
-    # sys.stdout = file(conf.info_log, "a")
+    import sys
+    sys.stderr = file(conf.error_log, "a")    
+    sys.stdout = file(conf.info_log, "a")
 
     # web.wsgi.runwsgi = lambda func, addr=None: web.wsgi.runfcgi(func, addr)
     app.run()

@@ -11,8 +11,9 @@ index_page_limit = 50
 search_page_limit = 100
 
 show_fullpath = False
-show_toc = True
+show_toc = False
 show_highlight = True
+use_markdown_ide = True
 
 enable_button_mode_path = True
 enable_safari_reader_mode = True

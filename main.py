@@ -15,13 +15,13 @@ from commons import zunicode
 from commons import netutils
 
 __all__ = [
-    'limit_ip',
-    'get_global_static_files',
+    "limit_ip",
+    "get_global_static_files",
 ]
 
 urls = (
-    '/~([a-zA-Z0-9_\-/.]+)', 'SpecialWikiPage',
-    ur'/([a-zA-Z0-9_\-/.%s]*)' % zunicode.CJK_RANGE, 'WikiPage',
+    "/~([a-zA-Z0-9_\-/.]+)", "SpecialWikiPage",
+    ur"/([a-zA-Z0-9_\-/.%s]*)" % zunicode.CJK_RANGE, "WikiPage",
 )
 
 app = web.application(urls, globals())
@@ -29,14 +29,14 @@ app = web.application(urls, globals())
 #
 # template & session
 #
-if not web.config.get('_session'):
+if not web.config.get("_session"):
     session = web.session.Session(app, web.session.DiskStore(conf.sessions_path), initializer={"username": None})
     web.config._session = session
 else:
     session = web.config._session
 
 t_globals = {
-    'utils' : web.utils,
+    "utils" : web.utils,
     "session" : session,
     "ctx" : web.ctx
     }
@@ -44,14 +44,14 @@ t_render = web.template.render(conf.templates_path, globals=t_globals)
 
 def session_hook():
     web.ctx.session = session
-    web.template.Template.globals['session'] = session
+    web.template.Template.globals["session"] = session
 app.add_processor(web.loadhook(session_hook))
 
 
 def limit_ip_test_func(*args, **kwargs):
     # allow_ips = ("192.168.0.10", )
     allow_ips = None
-    remote_ip = web.ctx['ip']
+    remote_ip = web.ctx["ip"]
     
     if not netutils.ip_in_network_ranges(remote_ip, allow_ips):
         return False
@@ -264,8 +264,8 @@ def search_by_filename_and_file_content(keywords,
     return content
 
 special_path_mapping = {
-    'index' : get_page_file_index,
-    's' : search_by_filename_and_file_content,
+    "index" : get_page_file_index,
+    "s" : search_by_filename_and_file_content,
 }
 
 def _append_static_file(buf, filepath, file_type, add_newline=False):
@@ -277,9 +277,9 @@ def _append_static_file(buf, filepath, file_type, add_newline=False):
         ref = '<script type="text/javascript" src="%s"></script>' % filepath
 
     if not add_newline:
-        static_files = '%s\n    %s' % (buf, ref)
+        static_files = "%s\n    %s" % (buf, ref)
     else:
-        static_files = '%s\n\n    %s' % (buf, ref)
+        static_files = "%s\n\n    %s" % (buf, ref)
 
     return static_files
 
@@ -498,6 +498,21 @@ def wp_delete(req_path):
     return
 
 
+def wp_source(req_path):
+    fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
+    
+    if os.path.isdir(fullpath):
+        web.header("Content-Type", "text/plain")
+        return "this is a black hole"
+    
+    elif os.path.isfile(fullpath):
+        web.header("Content-Type", "text/plain")        
+        return zutils.cat(fullpath)
+    
+    else:
+        raise web.BadRequest()
+
+
 class WikiPage:
     @limit_ip
     def GET(self, req_path):
@@ -505,8 +520,8 @@ class WikiPage:
         inputs = web.input()
         action = inputs.get("action", "read")
 
-        if action and action not in ("edit", "read", "rename", "delete"):
-            raise web.BadRequest()
+        # if action and action not in ("edit", "read", "rename", "delete"):
+        #     raise web.BadRequest()
 
         if action == "read":
             if req_path == "":
@@ -519,6 +534,8 @@ class WikiPage:
             return wp_rename(req_path)
         elif action == "delete":
             return wp_delete(req_path)
+        elif action == "source":
+            return wp_source(req_path)
 
         raise web.BadRequest()
 
@@ -562,7 +579,7 @@ class WikiPage:
             elif os.path.isdir(old_fullpath):
                 new_fullpath = os.path.join(conf.pages_path, new_path)
             else:
-                raise Exception('unknow path')
+                raise Exception("unknow path")
 
             if os.path.exists(new_fullpath):
                 err_info = "Warning: The page foobar already exists."

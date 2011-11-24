@@ -35,6 +35,7 @@ $if quicklinks:
 
 $if toolbox:
     <div id="toolbox">
+        <a href="/$req_path?action=source">Source</a>
         <a href="/$req_path?action=delete">Delete</a>
         <a href="/$req_path?action=rename">Rename</a>
         <a href="/$req_path?action=edit">Edit</a>

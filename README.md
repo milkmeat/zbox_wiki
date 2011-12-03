@@ -57,26 +57,12 @@ Visit http://localhost:8080 .
 
 ## SCREENSHOTS
 
+ - Auto generate table of content and highlight 
+ - List page files in tree
+ - Simple search
+ - Button-mode path
 
-Auto generate table of content and highlight
-
-![snapshot of ZWiki](http://img3.douban.com/view/photo/photo/public/p1255546232.jpg "ZWiki - auto generate table of
- content and highlight")
-
-
-List page files in tree
-
-![snapshot of ZWiki](http://img3.douban.com/view/photo/photo/public/p1255546341.jpg "ZWiki - list page files in tree")
-
-
-Simple search
-
-![snapshot of ZWiki](http://img3.douban.com/view/photo/photo/public/p1255546389.jpg "ZWiki - simple search")
-
-
-Button-mode path
-
-![snapshot of ZWiki](http://img3.douban.com/view/photo/photo/public/p1255546298.jpg "ZWiki - button-mode path")
+http://www.flickr.com/photos/71317153@N06/6445429383/in/set-72157628256603985/
 
 
 [latex]: http://www.tug.org/texlive

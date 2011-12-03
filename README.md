@@ -30,7 +30,7 @@ Visit http://localhost:8080 .
 - list all page files (implement in GNU findutils)
 - list recent changed page files (implement in GNU findutils)
 - search by file name and file content (implment in GNU findutils and GNU grep)
-- support simple TeX/LaTeX (required [LaTeX] [latex] and [dvipng] [dvipng])
+- support simple TeX/LaTeX (requires [LaTeX] [latex] and [dvipng] [dvipng])
 - support button mode path
 - IP/network range access restriction
 

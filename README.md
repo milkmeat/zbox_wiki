@@ -30,7 +30,7 @@ Visit http://localhost:8080 .
 - list all page files (implement in GNU findutils)
 - list recent changed page files (implement in GNU findutils)
 - search by file name and file content (implment in GNU findutils and GNU grep)
-- support simple LaTeX
+- support simple TeX/LaTeX (required [LaTeX] [latex] and [dvipng] [dvipng])
 - support button mode path
 - IP/network range access restriction
 
@@ -78,3 +78,6 @@ Button-mode path
 
 ![snapshot of ZWiki](http://img3.douban.com/view/photo/photo/public/p1255546298.jpg "ZWiki - button-mode path")
 
+
+[latex]: http://www.tug.org/texlive
+[dvipng]: http://savannah.nongnu.org/projects/dvipng

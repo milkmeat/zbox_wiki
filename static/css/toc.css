@@ -1,3 +1,7 @@
+#toc * {
+    font-size: 10px;
+}
+
 #toc { 
     position : fixed;
     top : 80px;
@@ -5,6 +9,9 @@
     padding: .5em 1em;
     border: 1px outset #ddc;
     background: #ffd;
+
+    /* un-comment following line to enable resize TOC div by DND */
+    width: 200px;
 }
 
 #toc ul { 

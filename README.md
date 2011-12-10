@@ -1,10 +1,8 @@
-# About ZWiki
+# About ZBox Wiki
 
-ZWiki is a lightweight wiki system implement in Python and web framework [web.py](http://webpy.org/).
+ZBox Wiki is a lightweight wiki system implement in Python and web framework [web.py](http://webpy.org/).
 
-ZWiki is not [Zwiki](http://en.wikipedia.org/wiki/Zwiki).
-
-ZWiki doesn't uses any databases, you can edit page files via 
+ZBox Wiki doesn't uses any databases, you can edit page files via 
 
 - Firefox + It's All Text! + Emacs/gVIM online
 - Emacs/gVIM offline
@@ -14,8 +12,8 @@ ZWiki doesn't uses any databases, you can edit page files via
 
 To get the latest development version from git:
 
-    git clone git@github.com:shuge/ZWiki.git
-    cd ZWiki.git
+    git clone git@github.com:shuge/zbox_wiki.git
+    cd zbox_wiki
     python main.py
     
 Visit http://localhost:8080 .

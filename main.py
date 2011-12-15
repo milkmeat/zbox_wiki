@@ -20,6 +20,7 @@ __all__ = [
 ]
 
 urls = (
+    "/robots.txt", "Robots",
     "/~([a-zA-Z0-9_\-/.]+)", "SpecialWikiPage",
     ur"/([a-zA-Z0-9_\-/.%s]*)" % zunicode.CJK_RANGE, "WikiPage",
 )
@@ -663,6 +664,15 @@ class SpecialWikiPage:
                                static_files = get_global_static_files())
 
 
+class Robots:
+    def GET(self):
+        path = os.path.join(conf.pages_path, "robots.txt")
+        content = zutils.cat(path)
+
+        web.header("Content-Type", "text/plain")        
+        return content
+    
+
 if __name__ == "__main__":
     # Notice:
     # you should remove datas/user.sqlite and sessions/* if you want a clean environment
@@ -673,9 +683,9 @@ if __name__ == "__main__":
     if not os.path.exists(conf.pages_path):
         os.mkdir(conf.pages_path)
 
-    import sys
-    sys.stderr = file(conf.error_log, "a")    
-    sys.stdout = file(conf.info_log, "a")
+    # import sys
+    # sys.stderr = file(conf.error_log, "a")    
+    # sys.stdout = file(conf.info_log, "a")
 
     # web.wsgi.runwsgi = lambda func, addr=None: web.wsgi.runfcgi(func, addr)
     app.run()

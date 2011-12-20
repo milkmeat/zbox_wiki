@@ -189,7 +189,7 @@ def ip_in_network_range(ip, network_range):
                 a = int(parts_b[i])
                 end = 255
 
-                if netmask % 8 != 0:
+                if netmask % 8 is not 0:
                     start = 255 - eval('0b' + (32 - netmask) % 8 * '1')
                 else:
                     start = 0

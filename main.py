@@ -1,28 +1,25 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 import cgi
+import functools
 import os
 import re
 import shutil
-from functools import wraps
-
 import web
 
+import commons
 import conf
-from commons import zmarkdown_utils
-from commons import zutils
-from commons import zunicode
-from commons import netutils
 
 __all__ = [
     "limit_ip",
     "get_global_static_files",
 ]
 
+
 urls = (
     "/robots.txt", "Robots",
     "/~([a-zA-Z0-9_\-/.]+)", "SpecialWikiPage",
-    ur"/([a-zA-Z0-9_\-/.%s]*)" % zunicode.CJK_RANGE, "WikiPage",
+    ur"/([a-zA-Z0-9_\-/.%s]*)" % commons.CJK_RANGE, "WikiPage",
 )
 
 app = web.application(urls, globals())
@@ -53,14 +50,14 @@ def limit_ip_test_func(*args, **kwargs):
     # allow_ips = ("192.168.0.10", )
     allow_ips = None
     remote_ip = web.ctx["ip"]
-    
-    if not netutils.ip_in_network_ranges(remote_ip, allow_ips):
+
+    if not commons.ip_in_network_ranges(remote_ip, allow_ips):
         return False
-    
+
     return True
 
 def limit_ip(f):
-    @wraps(f)
+    @functools.wraps(f)
     def wrapper(*args, **kwargs):
         if limit_ip_test_func(*args, **kwargs):
             return f(*args, **kwargs)
@@ -99,7 +96,7 @@ def get_page_file_title(req_path):
         'run air application on gentoo'
     """
     fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
-    c = zutils.cat(fullpath)
+    c = commons.cat(fullpath)
 
     p = '^#\s(?P<title>.+?)\s$'
     p_obj = re.compile(p, re.MULTILINE)
@@ -115,7 +112,7 @@ def get_page_file_title(req_path):
 
 def get_dot_idx_content_by_fullpath(fullpath):
     dot_idx_fullpath = os.path.join(fullpath, ".index.md")
-    return zutils.cat(dot_idx_fullpath)
+    return commons.cat(dot_idx_fullpath)
 
 
 def get_page_file_list_content_by_fullpath(fullpath, show_fullpath = conf.show_fullpath):
@@ -311,7 +308,7 @@ def get_global_static_files(show_toc = conf.show_toc,
 
     if show_toc:
         path = os.path.join("/static", "css", "toc.css")
-        static_files = _append_static_file(static_files, path, file_type="css")    
+        static_files = _append_static_file(static_files, path, file_type="css")
 
     if show_highlight:
         path = os.path.join("/static", "js", "prettify", "prettify.css")
@@ -342,7 +339,7 @@ def get_global_static_files(show_toc = conf.show_toc,
                     "highlight.js")
         for i in js_files:
             path = os.path.join("/static", "js", i)
-            static_files = _append_static_file(static_files, path, file_type="js")        
+            static_files = _append_static_file(static_files, path, file_type="js")
 
     return static_files
 
@@ -397,9 +394,9 @@ def wp_read_recent_change():
         content = get_recent_change_list(conf.index_page_limit, show_fullpath=show_fullpath)
 
     fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
-    content = zmarkdown_utils.markdown(text=content,
-                                       work_fullpath=fullpath,
-                                       static_file_prefix=static_file_prefix)
+    content = commons.md2html(text = content,
+                                work_fullpath = fullpath,
+                                static_file_prefix = static_file_prefix)
 
     static_files = get_global_static_files()
     # static_files = "%s\n    %s" % (static_files, get_the_same_folders_cssjs_files(req_path))
@@ -413,24 +410,24 @@ def wp_read(req_path):
     show_fullpath = inputs.get("show_fullpath", True)
     if show_fullpath == "0":
         show_fullpath = False
-        
+
     fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
 
     if conf.enable_button_mode_path:
-        buf = zmarkdown_utils.convert_text_path_to_button_path("/%s" % req_path)
-        title = zmarkdown_utils.markdown(buf)
+        buf = commons.text_path2btns_path("/%s" % req_path)
+        title = commons.md2html(buf)
     else:
         title = req_path
 
     if os.path.isfile(fullpath):
         work_fullpath = os.path.dirname(fullpath)
         static_file_prefix = os.path.join("/static/pages", os.path.dirname(req_path))
-        
-        content = zutils.cat(fullpath)
+
+        content = commons.cat(fullpath)
     elif os.path.isdir(fullpath):
         work_fullpath = fullpath
         static_file_prefix = os.path.join("/static/pages", req_path)
-        
+
         dot_idx_content = get_dot_idx_content_by_fullpath(fullpath)
         page_file_list_content = get_page_file_list_content_by_fullpath(fullpath,
                                                                         show_fullpath=show_fullpath)
@@ -444,7 +441,7 @@ def wp_read(req_path):
         web.seeother("/%s?action=edit" % req_path)
         return
 
-    content = zmarkdown_utils.markdown(text=content,
+    content = commons.md2html(text=content,
                                        work_fullpath=work_fullpath,
                                        static_file_prefix=static_file_prefix)
 
@@ -457,13 +454,13 @@ def wp_edit(req_path):
     fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
 
     if conf.enable_button_mode_path:
-        buf = zmarkdown_utils.convert_text_path_to_button_path("/%s" % req_path)
-        title = zmarkdown_utils.markdown(buf)
+        buf = commons.text_path2btns_path("/%s" % req_path)
+        title = commons.md2html(buf)
     else:
-        title = req_path    
+        title = req_path
 
     if os.path.isfile(fullpath):
-        content = zutils.cat(fullpath)
+        content = commons.cat(fullpath)
     elif os.path.isdir(fullpath):
         content = get_dot_idx_content_by_fullpath(fullpath)
     elif not os.path.exists(fullpath):
@@ -476,7 +473,7 @@ def wp_edit(req_path):
     # Markdown editor style
     path = os.path.join("/static", "css", "pagedown.css")
     static_files = _append_static_file(static_files, path, file_type="css", add_newline=True)
-    
+
     path = os.path.join("/static", "js", "editor.js")
     static_files = _append_static_file(static_files, path, file_type="js", add_newline=True)
 
@@ -484,15 +481,15 @@ def wp_edit(req_path):
 
 def wp_rename(req_path):
     fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
-    
+
     if not os.path.exists(fullpath):
         raise web.NotFound()
 
-    return t_render.rename(req_path, static_files = get_global_static_files())    
+    return t_render.rename(req_path, static_files = get_global_static_files())
 
 def wp_delete(req_path):
     fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
-    
+
     delete_page_file_by_fullpath(fullpath)
 
     web.seeother("/")
@@ -501,15 +498,15 @@ def wp_delete(req_path):
 
 def wp_source(req_path):
     fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
-    
+
     if os.path.isdir(fullpath):
         web.header("Content-Type", "text/plain")
         return "this is a black hole"
-    
+
     elif os.path.isfile(fullpath):
-        web.header("Content-Type", "text/plain")        
-        return zutils.cat(fullpath)
-    
+        web.header("Content-Type", "text/plain")
+        return commons.cat(fullpath)
+
     else:
         raise web.BadRequest()
 
@@ -624,7 +621,7 @@ class SpecialWikiPage:
 
         if req_path == "index":
             content = get_page_file_index(limit=limit, show_fullpath=show_fullpath)
-            content = zmarkdown_utils.markdown(content)
+            content = commons.md2html(content)
 
             static_files = get_global_static_files()
             static_files = "%s\n    %s" % (static_files, get_the_same_folders_cssjs_files(req_path))
@@ -656,7 +653,7 @@ class SpecialWikiPage:
         content = search_by_filename_and_file_content(keywords, limit=limit)
 
         if content:
-            content = zmarkdown_utils.markdown(content)
+            content = commons.md2html(content)
         else:
             content = "not found matched"
 
@@ -667,15 +664,15 @@ class SpecialWikiPage:
 class Robots:
     def GET(self):
         path = os.path.join(conf.pages_path, "robots.txt")
-        content = zutils.cat(path)
+        content = commons.cat(path)
 
-        web.header("Content-Type", "text/plain")        
+        web.header("Content-Type", "text/plain")
         return content
-    
+
 
 if __name__ == "__main__":
     # Notice:
-    # you should remove datas/user.sqlite and sessions/* if you want a clean environment
+    # you should remove sessions/* if you want a clean environment
 
     if not os.path.exists(conf.sessions_path):
         os.mkdir(conf.sessions_path)
@@ -683,8 +680,12 @@ if __name__ == "__main__":
     if not os.path.exists(conf.pages_path):
         os.mkdir(conf.pages_path)
 
+    page_link_in_static_path = os.path.join(conf.PWD, "static", "pages")
+    if not os.path.exists(page_link_in_static_path):        
+        os.symlink(conf.pages_path, page_link_in_static_path)
+
     # import sys
-    # sys.stderr = file(conf.error_log, "a")    
+    # sys.stderr = file(conf.error_log, "a")
     # sys.stdout = file(conf.info_log, "a")
 
     # web.wsgi.runwsgi = lambda func, addr=None: web.wsgi.runfcgi(func, addr)

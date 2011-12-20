@@ -8,6 +8,10 @@ click `East Asian Scripts` at left content table
 This script is based on The Unicode Standard Version 6.0 – Core Specification.
 """
 
+__all__ = [
+    "CJK_RANGE",
+]
+
 cjk_unified_ideographs = ur'\u4E00-\u9FFF'
 cjk_unified_ideographs_extension_a = ur'\u3400-\u4DFF'
 cjk_unified_ideographs_extension_b = ur'\u20000-\u2A6DF'

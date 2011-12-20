@@ -132,7 +132,9 @@ def get_page_file_list_content_by_fullpath(fullpath, show_fullpath = conf.show_f
         else:
             callable_obj = get_page_file_title
 
-        return sequence_to_unorder_list(lines=lines, strips_seq_item=".md", callable_obj=callable_obj)
+        return sequence_to_unorder_list(lines = lines,
+                                        strips_seq_item = strips_seq_item,
+                                        callable_obj = callable_obj)
 
 def delete_page_file_by_fullpath(fullpath):
     if os.path.isfile(fullpath):
@@ -354,7 +356,8 @@ def get_the_same_folders_cssjs_files(req_path):
         work_path = fullpath
         static_file_prefix = os.path.join("/static/pages", req_path)
     else:
-        work_path = conf.pages_path
+#        work_path = conf.pages_path
+        raise Exception("unknow path")
 
     iters = os.listdir(work_path)
     cssjs_files = [i for i in iters
@@ -518,8 +521,7 @@ class WikiPage:
         inputs = web.input()
         action = inputs.get("action", "read")
 
-        # if action and action not in ("edit", "read", "rename", "delete"):
-        #     raise web.BadRequest()
+        assert action in ("edit", "read", "rename", "delete")
 
         if action == "read":
             if req_path == "":

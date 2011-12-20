@@ -46,7 +46,7 @@ def session_hook():
 app.add_processor(web.loadhook(session_hook))
 
 
-def limit_ip_test_func(*args, **kwargs):
+def _limit_ip(*args, **kwargs):
     # allow_ips = ("192.168.0.10", )
     allow_ips = None
     remote_ip = web.ctx["ip"]
@@ -59,9 +59,29 @@ def limit_ip_test_func(*args, **kwargs):
 def limit_ip(f):
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
-        if limit_ip_test_func(*args, **kwargs):
+        if _limit_ip(*args, **kwargs):
             return f(*args, **kwargs)
-        raise web.forbidden()
+        raise web.Forbidden()
+    return wrapper
+
+
+def _acl(*args, **kwargs):
+    inputs = web.input()
+    action = inputs.get("action", "read")
+
+    if conf.readonly:
+        if action not in ("read", "source"):
+            return False
+
+    return True
+
+
+def acl(f):
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        if _acl(*args, **kwargs):
+            return f(*args, **kwargs)
+        raise web.Forbidden()
     return wrapper
 
 
@@ -356,8 +376,9 @@ def get_the_same_folders_cssjs_files(req_path):
         work_path = fullpath
         static_file_prefix = os.path.join("/static/pages", req_path)
     else:
-#        work_path = conf.pages_path
-        raise Exception("unknow path")
+        # special page, such as '~index'
+        work_path = conf.pages_path
+        static_file_prefix = "/static/pages"
 
     iters = os.listdir(work_path)
     cssjs_files = [i for i in iters
@@ -404,7 +425,11 @@ def wp_read_recent_change():
     static_files = get_global_static_files()
     # static_files = "%s\n    %s" % (static_files, get_the_same_folders_cssjs_files(req_path))
 
-    return t_render.canvas(req_path=req_path, title=title, content=content, toolbox=False,
+    return t_render.canvas(conf = conf,
+                           req_path = req_path,
+                           title = title,
+                           content = content,
+                           toolbox = False,
                            static_files = static_files)
 
 def wp_read(req_path):
@@ -451,7 +476,11 @@ def wp_read(req_path):
     static_files = get_global_static_files()
     static_files = "%s\n    %s" % (static_files, get_the_same_folders_cssjs_files(req_path))
 
-    return t_render.canvas(req_path=req_path, title=title, content=content, static_files=static_files)
+    return t_render.canvas(conf = conf,
+                           req_path=req_path,
+                           title=title,
+                           content=content,
+                           static_files=static_files)
 
 def wp_edit(req_path):
     fullpath = get_page_file_or_dir_fullpath_by_req_path(req_path)
@@ -516,12 +545,13 @@ def wp_source(req_path):
 
 class WikiPage:
     @limit_ip
+    @acl
     def GET(self, req_path):
         req_path = cgi.escape(req_path)
         inputs = web.input()
         action = inputs.get("action", "read")
 
-        assert action in ("edit", "read", "rename", "delete")
+        assert action in ("edit", "read", "rename", "delete", "source")
 
         if action == "read":
             if req_path == "":
@@ -540,6 +570,7 @@ class WikiPage:
         raise web.BadRequest()
 
     @limit_ip
+    @acl
     def POST(self, req_path):
         req_path = cgi.escape(req_path)
         inputs = web.input()
@@ -604,6 +635,7 @@ class WikiPage:
 
 class SpecialWikiPage:
     @limit_ip
+    @acl
     def GET(self, req_path):
         f = special_path_mapping.get(req_path)
 
@@ -630,11 +662,16 @@ class SpecialWikiPage:
 
             req_path = "~index"
             title = "index"
-            return t_render.canvas(req_path=req_path, title=title, content=content, toolbox=False,
+            return t_render.canvas(conf = conf,
+                                   req_path=req_path,
+                                   title=title,
+                                   content=content,
+                                   toolbox=False,
                                    static_files=static_files)
 
 
     @limit_ip
+    @acl
     def POST(self, req_path):
         f = special_path_mapping.get(req_path)
         inputs = web.input()

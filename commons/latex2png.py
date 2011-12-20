@@ -61,7 +61,7 @@ def latex2png(text, save_to_prefix):
         # compile LaTeX document file to a DVI file
         compile_cmd = 'latex -output-directory %s -interaction nonstopmode %s >/dev/null 2>/dev/null' % \
                       (tex_work_fullpath, tex_fullpath)
-        print "compile_cmd:", compile_cmd
+#        print "compile_cmd:", compile_cmd
         ret = os.system(compile_cmd)
         assert ret == 256
         
@@ -69,7 +69,7 @@ def latex2png(text, save_to_prefix):
         
         dvi_to_png_cmd = "dvipng -T tight -x 1200 -z 0 -bg Transparent -o %s %s 2>/dev/null 1>/dev/null" % \
                          (output_png_fullpath, dvi_fullpath)
-        print "dvi_to_png_cmd:", dvi_to_png_cmd
+#        print "dvi_to_png_cmd:", dvi_to_png_cmd
         ret = os.system(dvi_to_png_cmd)
         assert ret == 0
 

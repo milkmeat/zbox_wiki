@@ -1,4 +1,4 @@
-$def with (req_path, title, content, static_files=None, toolbox=True, quicklinks=True)
+$def with (conf, req_path, title, content, static_files=None, toolbox=True, quicklinks=True)
 <!DOCTYPE html>
 <html>
 <head>
@@ -36,9 +36,15 @@ $if quicklinks:
 $if toolbox:
     <div id="toolbox">
         <a href="/$req_path?action=source">Source</a>
-        <a href="/$req_path?action=delete">Delete</a>
-        <a href="/$req_path?action=rename">Rename</a>
-        <a href="/$req_path?action=edit">Edit</a>
+
+        $if not conf.readonly:
+            <a href="/$req_path?action=delete">Delete</a>
+            <a href="/$req_path?action=rename">Rename</a>
+            <a href="/$req_path?action=edit">Edit</a>
+        $else:
+            <span>Delete</span>
+            <span>Rename</span>
+            <span>Edit</span>
     </div>
 
 

@@ -7,6 +7,7 @@ Trac - Syntax Coloring of Source Code
 
 import os
 import re
+import sys
 
 import latex2png
 import md_table
@@ -174,7 +175,8 @@ def md2html(text, work_fullpath = None, static_file_prefix = None):
         try:
             buf = trac_wiki_latex2md(buf, save_to_prefix=work_fullpath)
         except Exception:
-            print "it seems that latex or dvipng doesn't works well on your box"
+            msg = "it seems that latex or dvipng doesn't works well on your box"
+            sys.stderr.write("\n" + msg + "\n")
 
     if static_file_prefix:
         buf = convert_static_file_url(buf, static_file_prefix)

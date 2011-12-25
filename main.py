@@ -11,10 +11,8 @@ import commons
 import conf
 
 __all__ = [
-    "limit_ip",
-    "get_global_static_files",
+    "app",
 ]
-
 
 urls = (
     "/robots.txt", "Robots",
@@ -708,8 +706,7 @@ class Robots:
         web.header("Content-Type", "text/plain")
         return content
 
-
-if __name__ == "__main__":
+def main():
     # Notice:
     # you should remove sessions/* if you want a clean environment
 
@@ -720,12 +717,15 @@ if __name__ == "__main__":
         os.mkdir(conf.pages_path)
 
     page_link_in_static_path = os.path.join(conf.PWD, "static", "pages")
-    if not os.path.exists(page_link_in_static_path):        
+    if not os.path.exists(page_link_in_static_path):
         os.symlink(conf.pages_path, page_link_in_static_path)
 
     # import sys
     # sys.stderr = file(conf.error_log, "a")
     # sys.stdout = file(conf.info_log, "a")
 
-    # web.wsgi.runwsgi = lambda func, addr=None: web.wsgi.runfcgi(func, addr)
+    web.wsgi.runwsgi = lambda func, addr=None: web.wsgi.runfcgi(func, addr)
     app.run()
+
+if __name__ == "__main__":
+    main()

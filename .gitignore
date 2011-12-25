@@ -7,7 +7,7 @@
 t.py
 error_log.txt
 info_log.txt
-pages
+pages/
 TODO.md
 build/
 dist/

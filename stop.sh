@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# On Mac OS X, pgrep could get from MacPorts package proctools, `sudo port install proctools`
+# Install on Mac OS X via MacPorts, sudo port install proctools
+# Install on Debian/Ubuntu via APT, sudo apt-get install procps
 
-pgrep -f `pwd`/main.py |xargs kill
+pgrep -f `pwd`/main.py | xargs kill
 

@@ -645,8 +645,6 @@ class SpecialWikiPage:
         if show_fullpath == "0":
             show_fullpath = False
 
-        print "show_fullpath:", show_fullpath
-
         limit = inputs.get("limit", conf.index_page_limit)
         if limit:
             limit = int(limit)

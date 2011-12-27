@@ -6,12 +6,12 @@ This script could use to
 - valid IP if in a network range
 
 """
-import fcntl
 import os
 import platform
 import socket
 import struct
 import uuid
+import sys
 import web
 
 __all__ = [
@@ -26,6 +26,7 @@ __all__ = [
 ]
 
 def _get_mac_addr_on_linux(ifname = "eth0"):
+    import fcntl
     s = socket.socket()
     info = fcntl.ioctl(s.fileno(), 0x8927,  struct.pack('256s', ifname[:15]))
     buf = ''.join(['%02x:' % ord(char) for char in info[18:24]])[:-1]
@@ -37,11 +38,16 @@ def _get_mac_addr_on_mac(hardware_port = "Ethernet"):
     return resp
 
 def get_mac_addr_by_if_name(if_name):
-    pl_name = platform.system()
-    if pl_name == "Darwin":
+    name = sys.platform
+
+    if name == "darwin":
         return get_mac_addr_on_mac(if_name)
-    elif pl_name == "Linux":
+
+    elif pl_name == "linux2":
         return get_mac_addr_on_linux(if_name)
+
+    else:
+        raise Exception
 
 def get_mac_addr():
     """ Return the first network interface MAC address.
@@ -73,10 +79,17 @@ def get_lan_ip():
     TODO:
     fix issue - it doesn't works when connect to network via PPPoE(it returns WAN IP)
     """
-    if platform.system() == "Darwin":
+    name = sys.platform
+
+    if name == "darwin":
         return _get_lan_ip_on_mac()
-    elif platform.system() == "Linux":
+
+    elif name == "linux2":
         return _get_lan_ip_on_linux
+
+    else:
+        raise Exception
+
 
 def _get_lan_ip_on_mac():
     """ Return LAN IP address, it works on box that behinds router/firewall.

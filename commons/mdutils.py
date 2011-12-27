@@ -172,11 +172,15 @@ def md2html(text, work_fullpath = None, static_file_prefix = None):
             msg = "it seems that latex or dvipng doesn't works well on your box, or source code is invalid"
             sys.stderr.write("\n" + msg + "\n")
 
+            buf = text
+
         try:
             buf = trac_wiki_dot2md(buf, save_to_prefix = work_fullpath)
         except Exception:
             msg = "it seems that graphviz doesn't works well on your box, or source code is invalid"
             sys.stderr.write("\n" + msg + "\n")
+
+            buf = text
 
     if static_file_prefix:
         buf = convert_static_file_url(buf, static_file_prefix)

@@ -18,6 +18,9 @@ __all__ = [
 ]
 
 
+DEBUG = False
+
+
 TEX_PREAMBLE = r'''
 \documentclass{article}
 \usepackage{amsmath}
@@ -54,18 +57,30 @@ def tex_text2png(text, save_to_prefix):
     f.close()
 
 
-    compile_cmd = 'latex -output-directory %s -interaction nonstopmode %s >/dev/null 2>/dev/null' % \
+    compile_cmd = 'latex -output-directory %s -interaction nonstopmode %s ' % \
                   (tex_work_fullpath, tex_fullpath)
 
-#    print "latex2png:", compile_cmd
+    if DEBUG:
+        msg = compile_cmd
+        sys.stdout.write("\n" + msg + "\n")
+    else:
+        disabled_debug_ouptut = " > /dev/null 2>/dev/null"        
+        compile_cmd += disabled_debug_ouptut
+        
     assert os.system(compile_cmd) == 256
 
 
     dvi_fullpath = os.path.join(tex_work_fullpath, filename + ".dvi")
-    dvi_to_png_cmd = "dvipng -T tight -x 1200 -z 0 -bg Transparent -o %s %s 2>/dev/null 1>/dev/null" % \
+    compile_cmd = "dvipng -T tight -x 1200 -z 0 -bg Transparent -o %s %s " % \
                      (png_fullpath, dvi_fullpath)
 
-#    print "dvi2png:", dvi_to_png_cmd
+    if DEBUG:
+        msg = compile_cmd
+        sys.stdout.write("\n" + msg + "\n")
+    else:
+        disabled_debug_ouptut = " 2>/dev/null 1>/dev/null"        
+        compile_cmd += disabled_debug_ouptut
+        
     assert os.system(dvi_to_png_cmd) == 0
 
     shutil.rmtree(tex_work_fullpath)

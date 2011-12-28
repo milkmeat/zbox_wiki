@@ -50,3 +50,11 @@ blockquote {
 /* .citation blockquote.citation { border-color: #4b4; } */
 /* .citation .citation blockquote.citation { border-color: #44b; } */
 /* .citation .citation .citation blockquote.citation { border-color: #c55; } */
+
+
+/* 
+   editor.tpl
+
+*/
+#wmd-preview { padding: 5px; }
+#wmd-preview h2 { margin-top: 0; }

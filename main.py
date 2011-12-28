@@ -498,7 +498,10 @@ def wp_edit(req_path):
     else:
         raise Exception("unknow path")
 
-    static_files = get_global_static_files()
+    static_files = get_global_static_files(show_toc = False,
+                            show_highlight = False,
+                            enable_safari_reader_mode = False,
+                            use_markdown_ide = conf.use_markdown_ide)
 
     # Markdown editor style
     path = os.path.join("/static", "css", "pagedown.css")

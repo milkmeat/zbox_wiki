@@ -15,10 +15,6 @@ $def with (req_path, title, content, static_files=None)
 
 <div id="container">
 
-<h2>Editing: $req_path</h2>
-
-
-
 <div id="editor">
     <form method="POST" accept-charset="utf-8">
 
@@ -26,6 +22,8 @@ $def with (req_path, title, content, static_files=None)
             <div id="wmd-button-bar"></div>
             <textarea class="wmd-input" id="wmd-input" name="content">$content</textarea>
         </div>
+
+        <hr />
 
         <div id="wmd-preview" class="wmd-panel wmd-preview"></div>
 

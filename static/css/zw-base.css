@@ -51,9 +51,9 @@ blockquote {
 /* .citation .citation blockquote.citation { border-color: #44b; } */
 /* .citation .citation .citation blockquote.citation { border-color: #c55; } */
 
-a { color: #000; text-decoration: none; border-bottom: 1px dashed #ccc; }
-a:hover { color: #666; text-decoration: underline; border-bottom: 0px; }
+a { color: #0e4c8a; text-decoration: none; border-bottom: 1px dashed #ccc; }
+a:hover { color: #0f65b8; text-decoration: underline; border-bottom: 0px; }
 
-span .hide { display: none; }
 
 footer { text-align: center; font-size: 12px; color: #666; }
+footer .hide { display: none; }

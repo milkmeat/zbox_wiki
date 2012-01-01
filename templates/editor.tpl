@@ -26,10 +26,6 @@ $def with (req_path, title, content, static_files=None)
             <input type="submit" value="Update" />
         </div>
 
-        <div class="help-links">
-            <a href="http://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown Syntax</a>, 
-            <a href="http://daringfireball.net/projects/markdown/dingus" target="_blank">Markdown Dingus</a>
-        </div>
     </form>
 </div>
 

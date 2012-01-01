@@ -23,7 +23,7 @@ reader_mode = True
 
 
 # ACL
-readonly = False
+readonly = True
 
 
 # debug
@@ -32,11 +32,10 @@ info_log = os.path.join(PWD, "info_log.txt")
 
 
 # bio/info
-#maintenance_email = "shuge.lee@gmail.com"
-maintenance_email = None
-repository_url = None
+maintainer_email = "shuge.lee@gmail.com"
+repository_url = "git://github.com/shuge/zbox_wiki.git"
 
-if maintenance_email:
-    splits = maintenance_email.split("@")
-    maintenance_email_prefix = splits[0]
-    maintenance_email_suffix = splits[1]
+if maintainer_email:
+    splits = maintainer_email.split("@")
+    maintainer_email_prefix = splits[0]
+    maintainer_email_suffix = splits[1]

@@ -12,6 +12,7 @@ This script requires
 import os
 import shutil
 import tempfile
+import sys
 
 __all__ = [
     "tex_text2png"
@@ -78,10 +79,10 @@ def tex_text2png(text, save_to_prefix):
         msg = compile_cmd
         sys.stdout.write("\n" + msg + "\n")
     else:
-        disabled_debug_ouptut = " 2>/dev/null 1>/dev/null"        
+        disabled_debug_ouptut = " 2>/dev/null 1>/dev/null"
         compile_cmd += disabled_debug_ouptut
         
-    assert os.system(dvi_to_png_cmd) == 0
+    assert os.system(compile_cmd) == 0
 
     shutil.rmtree(tex_work_full_path)
 

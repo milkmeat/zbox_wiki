@@ -36,26 +36,20 @@ $if quicklinks:
 $if toolbox:
     <div id="toolbox">
         <a href="/$req_path?action=source">Source</a>
-
-        $if not conf.readonly:
-            <a href="/$req_path?action=delete">Delete</a>
-            <a href="/$req_path?action=rename">Rename</a>
-            <a href="/$req_path?action=edit">Edit</a>
-        $else:
-            <span>Delete</span>
-            <span>Rename</span>
-            <span>Edit</span>
+        <a href="/$req_path?action=delete">Delete</a>
+        <a href="/$req_path?action=rename">Rename</a>
+        <a href="/$req_path?action=edit">Edit</a>
     </div>
 
 
 </div>
 
 
-$if conf.maintenance_email:
-    $ email = conf.maintenance_email_prefix + '<span class="hide">null</span>@' + conf.maintenance_email_suffix
+$if conf.readonly and conf.maintainer_email:
+    $ email = conf.maintainer_email_prefix + '<span class="hide">null</span>@' + conf.maintainer_email_suffix
     <footer>
         <p>
-            $email
+            Maintainer: $email
         </p>
     </footer>
 

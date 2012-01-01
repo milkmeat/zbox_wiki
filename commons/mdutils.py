@@ -21,12 +21,30 @@ __all__ = [
 
 
 def trac_wiki_code_block_to_md_code(text):
+    """ This API deprecated in the future. """
     alias_p = '[a-zA-Z0-9#\-\+ \.]'
     shebang_p = '(?P<shebang_line>[\s]*#!%s{1,21}[\s]*?)' % alias_p
 
     code_p = '(?P<code>[^\f\v]+?)'
 
     code_block_p = "^\{\{\{[\s]*%s*%s[\s]*\}\}\}" % (shebang_p, code_p)
+    code_block_p_obj = re.compile(code_block_p, re.MULTILINE)
+
+    def code_repl(match_obj):
+        code = match_obj.group('code')
+        buf = "\n    ".join(code.split(os.linesep))
+        buf = "    %s" % buf
+        return buf
+
+    return code_block_p_obj.sub(code_repl, text)
+
+def code_block_to_md_code(text):
+    alias_p = '[a-zA-Z0-9#\-\+ \.]'
+    shebang_p = '(?P<shebang_line>[\s]*#!%s{1,21}[\s]*?)' % alias_p
+
+    code_p = '(?P<code>[^\f\v]+?)'
+
+    code_block_p = "^```[\s]*%s*%s[\s]*```" % (shebang_p, code_p)
     code_block_p_obj = re.compile(code_block_p, re.MULTILINE)
 
     def code_repl(match_obj):
@@ -166,6 +184,7 @@ def md2html(text, work_full_path = None, static_file_prefix = None):
     buf = text    
     
     if work_full_path:
+#        buf = trac_wiki_tex2md(buf, save_to_prefix = work_full_path)
         try:
             buf = trac_wiki_tex2md(buf, save_to_prefix = work_full_path)
         except Exception:
@@ -174,6 +193,7 @@ def md2html(text, work_full_path = None, static_file_prefix = None):
 
             buf = text
 
+#        buf = trac_wiki_dot2md(buf, save_to_prefix = work_full_path)
         try:
             buf = trac_wiki_dot2md(buf, save_to_prefix = work_full_path)
         except Exception:
@@ -186,7 +206,8 @@ def md2html(text, work_full_path = None, static_file_prefix = None):
         buf = convert_static_file_url(buf, static_file_prefix)
 
 
-    buf = md_table.md_table2html(buf)    
+    buf = md_table.md_table2html(buf)
+    buf = code_block_to_md_code(buf)
     buf = trac_wiki_code_block_to_md_code(buf)
 
     buf = markdown.markdown(buf)

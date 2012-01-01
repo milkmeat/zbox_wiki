@@ -91,6 +91,19 @@ def check_acl(f):
 
 
 
+if conf.maintainer_email:
+    msg = "This wiki is READONLY." + "<br />"
+    msg += "Maintainer: " + conf.maintainer_email_prefix + " &lt;AT&gt; " + conf.maintainer_email_suffix + "<br />"
+    msg += "<br />"
+
+    if conf.repository_url:
+        msg += "You could fork it and commit changes, then send a pull request to maintainer." + "<br />"
+        msg += "<pre><code> git clone %s </code></pre>" % conf.repository_url
+
+    web.Forbidden.message = msg
+
+
+
 def get_recent_change_list(limit, show_full_path = conf.show_full_path):
     """ return recent changed files in HTML text for rendering page '/~recent_changed'. """
     get_rc_list_cmd = " cd %s; find . -name '*.md' | xargs ls -t | head -n %d " % \
@@ -717,7 +730,7 @@ class Robots:
         web.header("Content-Type", "text/plain")
         return content
 
-def main():
+def fix_folders():
     # Notice:
     # you should remove sessions/* if you want a clean environment
 
@@ -728,6 +741,7 @@ def main():
         os.mkdir(conf.pages_path)
 
     page_link_in_static_path = os.path.join(conf.PWD, "static", "pages")
+
     if not os.path.exists(page_link_in_static_path):
         os.symlink(conf.pages_path, page_link_in_static_path)
 
@@ -735,8 +749,9 @@ def main():
     # sys.stderr = file(conf.error_log, "a")
     # sys.stdout = file(conf.info_log, "a")
 
+if __name__ == "__main__":
+    fix_folders()
+
     web.wsgi.runwsgi = lambda func, addr=None: web.wsgi.runfcgi(func, addr)
     app.run()
 
-if __name__ == "__main__":
-    main()

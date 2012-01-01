@@ -15,4 +15,5 @@ if os.path.exists(other_pages_path):
         os.symlink(other_pages_path, page_link_in_static_path)
 
 import main
+main.fix_folders()
 main.app.run()

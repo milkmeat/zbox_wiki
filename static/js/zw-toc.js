@@ -7,7 +7,6 @@ var auto_generate_toc = function() {
     if (toc_element != undefined && toc_element.html() != "[[TOC]]") {
         var headers_list = document.querySelectorAll('h2, h3, h4, h5, h6');
         if (!headers_list.length) {
-            toc_element.hide();
             return;
         }
     } else {
@@ -16,7 +15,7 @@ var auto_generate_toc = function() {
 
 
     var toc_element = $("#toc");
-    if (!toc_element.length) {
+    if (!toc_element.length && headers_list.length) {
         $("#content").before(
             $('<div id="toc" class="draggable" />').append('<p class="bolder">Table of Contents</p><ul />')
         );

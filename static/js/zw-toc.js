@@ -18,7 +18,7 @@ var auto_generate_toc = function() {
     var toc_element = $("#toc");
     if (!toc_element.length) {
         $("#content").before(
-            $('<div id="toc" class="draggable" />').append('<p>Table of Contents</p><ul />')
+            $('<div id="toc" class="draggable" />').append('<p class="bolder">Table of Contents</p><ul />')
         );
 
         $(".draggable").draggable();

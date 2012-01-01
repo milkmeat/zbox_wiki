@@ -32,3 +32,5 @@
 #toc .h4 { padding-left : 2em; }
 #toc .h5 { padding-left : 3em; }
 #toc .h6 { padding-left : 4em; }
+
+#toc .bolder { font-weight: bolder; }

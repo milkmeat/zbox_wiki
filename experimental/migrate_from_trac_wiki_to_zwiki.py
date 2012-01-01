@@ -10,13 +10,13 @@ NOTICE: it supports SQLite3 database backend only.
 File migrate_from_trac_wiki_to_zwiki_conf.py *MUST* contains following variables:
 
 - trac_db_path
-    fullpath of your trac wiki database file, i.e., "/path/to/trac-wiki-instance/db/trac.db"
+    full_path of your trac wiki database file, i.e., "/path/to/trac-wiki-instance/db/trac.db"
 
 - trac_wiki_attachments_path
-    fullpath of your trac wiki attachements folder, i.e., "/Users/lee/backups/enjoy-series/attachments/wiki"
+    full_path of your trac wiki attachements folder, i.e., "/Users/lee/backups/enjoy-series/attachments/wiki"
 
 - zwiki_pages_path
-    fullpath of your zwiki instance' pages folder, i.e., /path/to/zwiki/pages"
+    full_path of your zwiki instance' pages folder, i.e., /path/to/zwiki/pages"
 
 - zwiki_host
     i.e., "127.0.0.1:8080"
@@ -36,7 +36,7 @@ PWD = osp.dirname(osp.realpath(__file__))
 db = web.database(dbn="sqlite", db=conf.trac_db_path)
 
 
-def get_page_file_or_dir_fullpath_by_req_path(req_path):
+def get_page_file_or_dir_full_path_by_req_path(req_path):
     if not req_path.endswith("/"):
         return "%s.md" % osp.join(conf.zwiki_pages_path, req_path)
     else:
@@ -78,13 +78,13 @@ def create_page(req_path, content):
 
 def create_attachments(page_name):
     page_name = quote_plus_page_name(web.utils.safestr(page_name))
-    attaches_fullpath =  osp.join(conf.trac_wiki_attachments_path, page_name)
+    attaches_full_path =  osp.join(conf.trac_wiki_attachments_path, page_name)
 
-#    print "attaches_fullpath:", attaches_fullpath
+#    print "attaches_full_path:", attaches_full_path
 #    print
 
-    if not osp.exists(attaches_fullpath):
-        print "warning: `%s` not found" % attaches_fullpath
+    if not osp.exists(attaches_full_path):
+        print "warning: `%s` not found" % attaches_full_path
         return
 
 
@@ -96,20 +96,20 @@ def create_attachments(page_name):
         if not osp.exists(parent):
             os.makedirs(parent)
 
-    attaches = os.listdir(attaches_fullpath)
+    attaches = os.listdir(attaches_full_path)
     attaches = [i for i in attaches if not i.startswith(".")]
 
     for i in attaches:
-        src = osp.join(attaches_fullpath, i)
+        src = osp.join(attaches_full_path, i)
         if not osp.isfile(src):
             continue
 
-        page_file_fullpath = get_page_file_or_dir_fullpath_by_req_path(fixed_page_name)
+        page_file_full_path = get_page_file_or_dir_full_path_by_req_path(fixed_page_name)
 
-        if osp.isfile(page_file_fullpath):
+        if osp.isfile(page_file_full_path):
             dst = osp.join(parent, i)
         else:
-            dst = page_file_fullpath
+            dst = page_file_full_path
 
 #        print "copy"
 #        print "\tsrc: ", src

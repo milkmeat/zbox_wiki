@@ -16,7 +16,7 @@ $def with (conf, req_path, title, content, static_files=None, toolbox=True, quic
 
 $if quicklinks:
     <div id="quicklinks">
-        <a href="/">Recnet Changes</a>
+        <a href="/">Recent Changes</a>
         <a href="/~index">Index</a>
     </div>
 

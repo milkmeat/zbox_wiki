@@ -17,24 +17,19 @@ $def with (req_path, title, content, static_files=None)
 
 <div id="editor">
     <form method="POST" accept-charset="utf-8">
-
-        <div class="wmd-panel">
-            <div id="wmd-button-bar"></div>
-            <textarea class="wmd-input" id="wmd-input" name="content">$content</textarea>
+        <div class="input-widget">
+            <label for="content">Content</label>
+            <textarea cols="80" rows="20" id="content" name="content">$content</textarea>
         </div>
-
-        <hr />
-
-        <div id="wmd-preview" class="wmd-panel wmd-preview"></div>
 
         <div id="toolbox">
             <input type="submit" value="Update" />
         </div>
 
-        <p>
+        <div class="help-links">
             <a href="http://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown Syntax</a>, 
             <a href="http://daringfireball.net/projects/markdown/dingus" target="_blank">Markdown Dingus</a>
-        </p>
+        </div>
     </form>
 </div>
 

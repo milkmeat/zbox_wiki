@@ -15,9 +15,11 @@
 }
 
 #toc ul { 
-    list-style : none; 
+    list-style : none;
+
     /* fix it on webkit */
     -webkit-padding-start: 0px;
+
     /* fix it on Gecko */
     padding-left : 0px;
 }

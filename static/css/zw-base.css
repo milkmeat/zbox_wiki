@@ -51,10 +51,5 @@ blockquote {
 /* .citation .citation blockquote.citation { border-color: #44b; } */
 /* .citation .citation .citation blockquote.citation { border-color: #c55; } */
 
-
-/* 
-   editor.tpl
-
-*/
-#wmd-preview { padding: 5px; }
-#wmd-preview h2 { margin-top: 0; }
+a { color: #000; text-decoration: none; border-bottom: 1px dashed #ccc; }
+a:hover { color: #666; text-decoration: underline; border-bottom: 0px; }

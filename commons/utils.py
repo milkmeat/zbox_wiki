@@ -14,9 +14,9 @@ __all__ = [
 def cat(*args):
     buf = ""
     for i in args:
-        fullpath = web.safeunicode(i)
-        if os.path.isfile(fullpath):
-            f = file(fullpath)
+        full_path = web.safeunicode(i)
+        if os.path.isfile(full_path):
+            f = file(full_path)
             buf = "%s%s" % (buf, f.read().strip())
             f.close()
 
@@ -30,9 +30,9 @@ def which(name):
         )
 
     for i in bin_paths:
-        fullpath = os.path.join(i, name)
-        if os.path.exists(fullpath):
-            return fullpath
+        full_path = os.path.join(i, name)
+        if os.path.exists(full_path):
+            return full_path
 
 
 def run(cmd):

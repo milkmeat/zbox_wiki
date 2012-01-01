@@ -162,12 +162,12 @@ def text_path2btns_path(path):
 
     return button_path
 
-def md2html(text, work_fullpath = None, static_file_prefix = None):
+def md2html(text, work_full_path = None, static_file_prefix = None):
     buf = text    
     
-    if work_fullpath:
+    if work_full_path:
         try:
-            buf = trac_wiki_tex2md(buf, save_to_prefix = work_fullpath)
+            buf = trac_wiki_tex2md(buf, save_to_prefix = work_full_path)
         except Exception:
             msg = "it seems that latex or dvipng doesn't works well on your box, or source code is invalid"
             sys.stderr.write("\n" + msg + "\n")
@@ -175,7 +175,7 @@ def md2html(text, work_fullpath = None, static_file_prefix = None):
             buf = text
 
         try:
-            buf = trac_wiki_dot2md(buf, save_to_prefix = work_fullpath)
+            buf = trac_wiki_dot2md(buf, save_to_prefix = work_full_path)
         except Exception:
             msg = "it seems that graphviz doesn't works well on your box, or source code is invalid"
             sys.stderr.write("\n" + msg + "\n")

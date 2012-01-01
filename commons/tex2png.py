@@ -41,24 +41,24 @@ def tex_text2png(text, save_to_prefix):
 
     filename = str(hash(text)).replace("-", "")
     fullname = filename + ".png"
-    png_fullpath = os.path.join(save_to_prefix, fullname)
+    png_full_path = os.path.join(save_to_prefix, fullname)
 
-    if os.path.exists(png_fullpath):
+    if os.path.exists(png_full_path):
         return fullname
 
 #    print "generating ..."
     
-    tex_work_fullpath = tempfile.mkdtemp(prefix="latex_")        
-    tex_fullpath = os.path.join(tex_work_fullpath, filename + ".tex")
+    tex_work_full_path = tempfile.mkdtemp(prefix="latex_")
+    tex_full_path = os.path.join(tex_work_full_path, filename + ".tex")
 
-    f = open(tex_fullpath, "w+")
+    f = open(tex_full_path, "w+")
     tex_tpl = "%s\n%s\n%s" % (TEX_PREAMBLE, text, TEX_END)
     f.write(tex_tpl)
     f.close()
 
 
     compile_cmd = 'latex -output-directory %s -interaction nonstopmode %s ' % \
-                  (tex_work_fullpath, tex_fullpath)
+                  (tex_work_full_path, tex_full_path)
 
     if DEBUG:
         msg = compile_cmd
@@ -70,9 +70,9 @@ def tex_text2png(text, save_to_prefix):
     assert os.system(compile_cmd) == 256
 
 
-    dvi_fullpath = os.path.join(tex_work_fullpath, filename + ".dvi")
+    dvi_full_path = os.path.join(tex_work_full_path, filename + ".dvi")
     compile_cmd = "dvipng -T tight -x 1200 -z 0 -bg Transparent -o %s %s " % \
-                     (png_fullpath, dvi_fullpath)
+                     (png_full_path, dvi_full_path)
 
     if DEBUG:
         msg = compile_cmd
@@ -83,7 +83,7 @@ def tex_text2png(text, save_to_prefix):
         
     assert os.system(dvi_to_png_cmd) == 0
 
-    shutil.rmtree(tex_work_fullpath)
+    shutil.rmtree(tex_work_full_path)
 
     return fullname
 

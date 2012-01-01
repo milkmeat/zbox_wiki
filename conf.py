@@ -30,3 +30,13 @@ readonly = False
 error_log = os.path.join(PWD, "error_log.txt")
 info_log = os.path.join(PWD, "info_log.txt")
 
+
+# bio/info
+#maintenance_email = "shuge.lee@gmail.com"
+maintenance_email = None
+repository_url = None
+
+if maintenance_email:
+    splits = maintenance_email.split("@")
+    maintenance_email_prefix = splits[0]
+    maintenance_email_suffix = splits[1]

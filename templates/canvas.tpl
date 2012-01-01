@@ -51,5 +51,13 @@ $if toolbox:
 </div>
 
 
+$if conf.maintenance_email:
+    $ email = conf.maintenance_email_prefix + '<span class="hide">null</span>@' + conf.maintenance_email_suffix
+    <footer>
+        <p>
+            $email
+        </p>
+    </footer>
+
 </body>
 </html>

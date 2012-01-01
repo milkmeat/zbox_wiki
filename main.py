@@ -670,7 +670,7 @@ class SpecialWikiPage:
             static_files = "%s\n    %s" % (static_files, get_the_same_folders_cssjs_files(req_path))
 
             req_path = "~index"
-            title = "index"
+            title = "Index"
             return t_render.canvas(conf = conf,
                                    req_path=req_path,
                                    title=title,

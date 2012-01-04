@@ -451,12 +451,17 @@ def wp_read_recent_change():
         content = get_recent_change_list(conf.index_page_limit, show_full_path=show_full_path)
 
     full_path = get_page_file_or_dir_full_path_by_req_path(req_path)
-    content = commons.md2html(text = content,
-                                work_full_path = full_path,
-                                static_file_prefix = static_file_prefix)
+
+    if content:
+        content = commons.md2html(text = content,
+                                  work_full_path = full_path,
+                                  static_file_prefix = static_file_prefix)
+    else:
+        content = "Not found"
 
     static_files = get_global_static_files()
     # static_files = "%s\n    %s" % (static_files, get_the_same_folders_cssjs_files(req_path))
+    assert static_files != None
 
     return t_render.canvas(conf = conf,
                            req_path = req_path,

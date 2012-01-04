@@ -200,6 +200,7 @@ def text_path2btns_path(path):
     return button_path
 
 def md2html(text, work_full_path = None, static_file_prefix = None):
+    assert text != None
     buf = text    
     
     if work_full_path and tex2png:

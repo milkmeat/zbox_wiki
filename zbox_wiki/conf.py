@@ -1,11 +1,14 @@
 import os
 
+debug = True
+
 # path
 PWD = os.path.dirname(os.path.realpath(__file__))
 pages_path = os.path.join(PWD, "pages")
 
 sessions_path = os.path.join(PWD, 'sessions')
 templates_path = os.path.join(PWD, "templates")
+static_path = os.path.join(PWD, "static")
 
 
 # pagination

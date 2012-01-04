@@ -1,10 +1,5 @@
 #!/usr/bin/env python
-
-"""
-Trac - Syntax Coloring of Source Code
-- http://trac.edgewall.org/wiki/TracSyntaxColoring
-"""
-
+#-*- coding:utf-8 -*-
 import os
 import re
 import sys
@@ -126,6 +121,20 @@ def _fix_img_url_with_option(text, static_file_prefix = None):
     img_url_p_obj = re.compile(img_url_p, re.MULTILINE)
     return img_url_p_obj.sub(img_url_repl, text)
 
+def uri2html_link(text):
+    """ References:
+
+     - http://stackoverflow.com/questions/6718633/python-regular-expression-again-match-url
+     - http://daringfireball.net/2010/07/improved_regex_for_matching_urls
+    """
+    p = r'''(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))'''
+    p_obj = re.compile(p, re.UNICODE | re.MULTILINE)
+
+    def repl(match_obj):
+        url = match_obj.groups()[0]
+        return '<a href="%s">%s</a>' % (url, url)
+
+    return p_obj.sub(repl, text)
 
 def convert_static_file_url(text, static_file_prefix):
     text = _fix_img_url(text, static_file_prefix)

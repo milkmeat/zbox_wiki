@@ -9,14 +9,18 @@ import sys
 import web
 
 import commons
-import conf
+try:
+    import conf
+except ImportError:
+    import default_conf as conf
 
 __all__ = [
-    "app",
+    "start",
 ]
 
 
-web.config.debug = True
+web.config.debug = conf.debug
+#os.environ["PATH_INFO"] = conf.static_path
 
 
 urls = (
@@ -740,17 +744,24 @@ def fix_folders():
     if not os.path.exists(conf.pages_path):
         os.mkdir(conf.pages_path)
 
-    page_link_in_static_path = os.path.join(conf.PWD, "static", "pages")
+
+    page_link_in_static_path = os.path.join(conf.static_path, "pages")
 
     if not os.path.exists(page_link_in_static_path):
         os.symlink(conf.pages_path, page_link_in_static_path)
 
-    # import sys
-    # sys.stderr = file(conf.error_log, "a")
-    # sys.stdout = file(conf.info_log, "a")
+def start():
+    fix_folders()
+    app.run()
+
 
 if __name__ == "__main__":
+    import sys
+
     fix_folders()
+
+#    sys.stderr = file(conf.error_log, "a")
+#    sys.stdout = file(conf.info_log, "a")
 
     web.wsgi.runwsgi = lambda func, addr=None: web.wsgi.runfcgi(func, addr)
     app.run()

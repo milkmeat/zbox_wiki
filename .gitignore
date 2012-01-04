@@ -17,3 +17,5 @@ ignore/
 sessions/
 scripts/conf.py
 experimental/migrate_from_trac_wiki_to_zwiki_conf.py
+zbox_wiki/other_pages
+zbox_wiki/static/pages

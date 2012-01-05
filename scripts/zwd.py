@@ -35,12 +35,17 @@ def run_instance():
 
     src_full_path = os.path.join(proj_root_full_path, "pages")
     dst_full_path = os.path.join(proj_root_full_path, "static", "pages")
+
+    # remove invalid symlink
+    dst_real_full_path = os.path.realpath(dst_full_path)
+    if os.path.exists(dst_full_path) and not os.path.exists(dst_real_full_path):
+        os.remove(dst_full_path)
+
     if not os.path.exists(dst_full_path):
         os.symlink(src_full_path, dst_full_path)
 
     
     import zbox_wiki
-    zbox_wiki.commons.tex2png.DEBUG = True
     zbox_wiki.start()
 
 if __name__ == "__main__":

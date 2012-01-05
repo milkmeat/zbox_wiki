@@ -4,11 +4,37 @@ import shutil
 import sys
 
 
-def print_help():
-    msg = "Usage" + "\n"
-    msg += "\t python zwadmin.py create <path>" + "\n"
-    msg += "\t python zwadmin.py deploy <path>" + "\n"
+zwadmin_help_tpl = """
+Usage:
 
+    zwadmin create <path>
+    zwadmin deploy <path>
+
+If you are using VirtualENV, try:
+
+    cd $(dirname `which python`)
+    python zwadmin.py create <path>
+    python zwadmin.py deploy <path>"
+
+"""
+
+def print_help():
+    sys.stdout.write(zwadmin_help_tpl)
+
+
+zwd_help_tpl = """
+start ZBox Wiki:
+    zwd --path %s
+
+If you are using VirtualENV, try:
+
+    cd $(dirname `which python`)
+    python zwd.py --path %s
+
+"""
+
+def print_zwd_help(proj_root_path):
+    msg = zwd_help_tpl % (proj_root_path, proj_root_path)
     sys.stdout.write(msg)
 
 
@@ -33,8 +59,7 @@ def action_create(proj_root_path):
         shutil.copy(conf_full_path, dst_full_path)
 
 
-    msg = "start: zwd --path %s" % proj_root_path + "\n"
-    sys.stdout.write(msg)
+    print_zwd_help(proj_root_path)
 
 
 def action_deploy(proj_root_path):
@@ -55,7 +80,6 @@ if __name__ == "__main__":
 
         path = option
         proj_root_path = os.path.realpath(path)
-        print "project root path:", proj_root_path
 
         if not os.path.exists(path):
             os.makedirs(path)

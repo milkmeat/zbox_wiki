@@ -1,5 +1,4 @@
-import distutils
-
+#!/usr/bin/env python
 from distutils.core import setup
 
 short_desc = "a lightweight wiki system with Markdown/Graphviz/LaTeX support"
@@ -42,6 +41,8 @@ setup(
           "templates/*.tpl",
           "static/css/*.css",
           "static/js/*.js",
+          "static/js/prettify/*.js",
+          "static/js/prettify/*.css",
           "pages/robots.txt",
           "pages/zbox-wiki/*.md",
           ],

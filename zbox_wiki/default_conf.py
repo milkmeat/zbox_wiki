@@ -30,8 +30,8 @@ readonly = True
 
 
 # debug
-error_log = os.path.join(PWD, "error_log.txt")
-info_log = os.path.join(PWD, "info_log.txt")
+#error_log = os.path.join(PWD, "error_log.txt")
+#info_log = os.path.join(PWD, "info_log.txt")
 
 
 # bio/info

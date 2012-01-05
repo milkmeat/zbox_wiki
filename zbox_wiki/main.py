@@ -20,7 +20,7 @@ __all__ = [
 
 
 web.config.debug = conf.debug
-#os.environ["PATH_INFO"] = conf.static_path
+web.config.static_path = conf.static_path
 
 
 urls = (
@@ -734,35 +734,19 @@ class Robots:
         web.header("Content-Type", "text/plain")
         return content
 
-def fix_folders():
-    # Notice:
-    # you should remove sessions/* if you want a clean environment
-
-    if not os.path.exists(conf.sessions_path):
-        os.mkdir(conf.sessions_path)
-
-    if not os.path.exists(conf.pages_path):
-        os.mkdir(conf.pages_path)
-
-
-    page_link_in_static_path = os.path.join(conf.static_path, "pages")
-
-    if not os.path.exists(page_link_in_static_path):
-        os.symlink(conf.pages_path, page_link_in_static_path)
 
 def start():
-    fix_folders()
     app.run()
 
 
 if __name__ == "__main__":
-    import sys
-
-    fix_folders()
-
+#    import sys
 #    sys.stderr = file(conf.error_log, "a")
 #    sys.stdout = file(conf.info_log, "a")
 
+    #
+    # run it in WSGI mode,
+    # see also http://webpy.org/cookbook/fastcgi-nginx
+    #
     web.wsgi.runwsgi = lambda func, addr=None: web.wsgi.runfcgi(func, addr)
     app.run()
-

@@ -8,3 +8,5 @@ dist/
 .ropeproject/
 ignore/
 experimental/
+zbox_wiki/pages/zbox-wiki/*.png
+zbox_wiki/sessions/

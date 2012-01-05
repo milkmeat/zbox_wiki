@@ -4,8 +4,18 @@ import os
 import re
 import sys
 
-import dot2png
-import tex2png
+try:
+    import dot2png
+except ImportError:
+    dot2png = None
+    pass
+
+try:
+    import tex2png
+except ImportError:
+    tex2png = None
+    pass
+
 import md_table
 import markdown
 
@@ -190,9 +200,10 @@ def text_path2btns_path(path):
     return button_path
 
 def md2html(text, work_full_path = None, static_file_prefix = None):
+    assert text != None
     buf = text    
     
-    if work_full_path:
+    if work_full_path and tex2png:
 #        buf = trac_wiki_tex2md(buf, save_to_prefix = work_full_path)
         try:
             buf = trac_wiki_tex2md(buf, save_to_prefix = work_full_path)
@@ -202,6 +213,7 @@ def md2html(text, work_full_path = None, static_file_prefix = None):
 
             buf = text
 
+    if work_full_path and dot2png:
 #        buf = trac_wiki_dot2md(buf, save_to_prefix = work_full_path)
         try:
             buf = trac_wiki_dot2md(buf, save_to_prefix = work_full_path)

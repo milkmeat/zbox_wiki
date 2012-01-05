@@ -6,7 +6,7 @@ short_desc = "a lightweight wiki system with Markdown/Graphviz/LaTeX support"
 setup(
     name = "zbox_wiki",
     description = short_desc,
-    long_description = "ZBox Wiki is %s, it's easy to use, easy to read and easy to extend.",
+    long_description = "ZBox Wiki is %s, it's easy to use, easy to read and easy to extend." % short_desc,
     
     version = "201201",
     

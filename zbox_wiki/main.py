@@ -31,29 +31,26 @@ urls = (
 
 app = web.application(urls, globals())
 
+t_render = web.template.render(conf.templates_path)
 
-
+#def config_template_and_session():
+#    if not web.config.get("_session"):
+#        session = web.session.Session(app, web.session.DiskStore(conf.sessions_path), initializer={"username": None})
+#        web.config._session = session
+#    else:
+#        session = web.config._session
 #
-# template & session
+#    t_globals = {
+#        "utils" : web.utils,
+#        "session" : session,
+#        "ctx" : web.ctx
+#        }
+#    t_render = web.template.render(conf.templates_path, globals=t_globals)
 #
-if not web.config.get("_session"):
-    session = web.session.Session(app, web.session.DiskStore(conf.sessions_path), initializer={"username": None})
-    web.config._session = session
-else:
-    session = web.config._session
-
-t_globals = {
-    "utils" : web.utils,
-    "session" : session,
-    "ctx" : web.ctx
-    }
-t_render = web.template.render(conf.templates_path, globals=t_globals)
-
-def session_hook():
-    web.ctx.session = session
-    web.template.Template.globals["session"] = session
-app.add_processor(web.loadhook(session_hook))
-
+#    def session_hook():
+#        web.ctx.session = session
+#        web.template.Template.globals["session"] = session
+#    app.add_processor(web.loadhook(session_hook))
 
 
 def _check_ip(*args, **kwargs):
@@ -738,7 +735,6 @@ class Robots:
 
         web.header("Content-Type", "text/plain")
         return content
-
 
 def start():
     app.run()

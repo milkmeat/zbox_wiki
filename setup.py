@@ -1,9 +1,14 @@
 #!/usr/bin/env python
-from distutils.core import setup
+try:
+    import setuptools
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
+    setuptools = None
 
 short_desc = "a lightweight wiki system with Markdown/Graphviz/LaTeX support"
 
-setup(
+kwargs = dict(
     name = "zbox_wiki",
     description = short_desc,
     long_description = "ZBox Wiki is %s, it's easy to use, easy to read and easy to extend." % short_desc,
@@ -52,7 +57,9 @@ setup(
         "scripts/zwadmin.py",
         "scripts/zwd.py",
     ],
+)    
     
-    
-    
-)
+if setuptools:
+    kwargs["install_requires"] = ["markdown>=2.1"]
+
+setup(**kwargs)

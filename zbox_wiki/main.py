@@ -741,13 +741,9 @@ def start():
 
 
 if __name__ == "__main__":
-#    import sys
-#    sys.stderr = file(conf.error_log, "a")
-#    sys.stdout = file(conf.info_log, "a")
-
     #
     # run it in WSGI mode,
     # see also http://webpy.org/cookbook/fastcgi-nginx
     #
-    web.wsgi.runwsgi = lambda func, addr=None: web.wsgi.runfcgi(func, addr)
+    web.wsgi.runwsgi = lambda func, addr = None: web.wsgi.runfcgi(func, addr)
     app.run()

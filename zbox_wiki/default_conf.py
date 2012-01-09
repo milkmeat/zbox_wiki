@@ -30,9 +30,9 @@ reader_mode = True
 readonly = True
 
 
-# debug
-#error_log = os.path.join(PWD, "error_log.txt")
-#info_log = os.path.join(PWD, "info_log.txt")
+# debug log
+error_log_path = os.path.join(PWD, "tmp", "error_log.txt")
+info_log_path = os.path.join(PWD, "tmp", "info_log.txt")
 
 
 # bio/info

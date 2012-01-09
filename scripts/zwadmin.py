@@ -48,7 +48,7 @@ def action_create(proj_root_path):
         shutil.copytree(src_full_path, dst_full_path)
 
 
-    for folder_name in ("log", "tmp", "sessions"):
+    for folder_name in ("tmp", "sessions"):
         src_full_path = os.path.join(proj_root_path, folder_name)
         os.mkdir(src_full_path)
 

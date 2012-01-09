@@ -33,6 +33,21 @@ def run_instance():
     import conf
 
 
+    if conf.error_log_path:
+        path = os.path.dirname(conf.error_log_path)
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        sys.stderr = file(conf.error_log_path, "a")
+
+    if conf.info_log_path:
+        path = os.path.dirname(conf.info_log_path)
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        sys.stdout = file(conf.info_log_path, "a")
+
+
     src_full_path = os.path.join(proj_root_full_path, "pages")
     dst_full_path = os.path.join(proj_root_full_path, "static", "pages")
 

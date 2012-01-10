@@ -141,11 +141,12 @@ def get_page_file_title(req_path):
         'run air application on gentoo'
     """
     full_path = get_page_file_or_dir_full_path_by_req_path(req_path)
-    c = commons.cat(full_path)
+    buf = commons.cat(full_path)
 
-    p = '^#\s(?P<title>.+?)\s$'
-    p_obj = re.compile(p, re.MULTILINE)
-    match_obj = p_obj.search(c)
+    p = '^#\s*(?P<title>.+?)\s*$'
+    p_obj = re.compile(p, re.UNICODE | re.MULTILINE)
+    match_obj = p_obj.search(buf)
+
     if match_obj:
         title = match_obj.group('title')
     elif '/' in req_path:
@@ -191,9 +192,12 @@ def delete_page_file_by_full_path(full_path):
         return True
     return False
 
-def get_page_file_index(limit = conf.index_page_limit, show_full_path = conf.show_full_path):
+def get_page_file_index(path = conf.pages_path,
+                        maxdepth = 10,
+                        limit = conf.index_page_limit,
+                        show_full_path = conf.show_full_path):
     """ return all files list in HTML text for rendering page '/index'. """
-    get_page_file_index_cmd = " cd %s; find . -name '*.md' | head -n %d " % (conf.pages_path, limit)
+    get_page_file_index_cmd = " cd %s; find . -name '*.md' -maxdepth %d | head -n %d " % (path, maxdepth, limit)
     buf = os.popen(get_page_file_index_cmd).read().strip()
     if buf:
         buf = web.utils.safeunicode(buf)
@@ -204,10 +208,21 @@ def get_page_file_index(limit = conf.index_page_limit, show_full_path = conf.sho
         else:
             callable_obj = get_page_file_title
 
-        content = _sequence_to_unorder_list(lines, strips_seq_item=".md", callable_obj=callable_obj)
+        if path == conf.pages_path:
+            custom_line_prefix = None
+        else:
+            custom_line_prefix = web.lstrips(path, conf.pages_path)
+
+        content = _sequence_to_unorder_list(lines,
+                                            strips_seq_item = ".md",
+                                            callable_obj = callable_obj,
+                                            custom_line_prefix = custom_line_prefix)
         return content
 
-def _sequence_to_unorder_list(lines, strips_seq_item=None, callable_obj=None):
+def _sequence_to_unorder_list(lines,
+                              strips_seq_item = None,
+                              callable_obj = None,
+                              custom_line_prefix = None):
     """
         >>> _sequence_to_unorder_list(['a','b','c'])
         '- [a](/a)\\n- [b](/b)\\n- [c](/c)'
@@ -219,9 +234,13 @@ def _sequence_to_unorder_list(lines, strips_seq_item=None, callable_obj=None):
         if strips_seq_item:
             name = web.utils.strips(name, strips_seq_item)
 
-        url = os.path.join("/", name)
+        if not custom_line_prefix:
+            url = os.path.join("/", name)
+        else:
+            url = os.path.join(custom_line_prefix, name)
+
         if callable_obj:
-            name = apply(callable_obj, (name, ))
+            name = callable_obj(url)
         lis.append('- [%s](%s)' % (name, url))
 
     content = "\n".join(lis)
@@ -313,7 +332,7 @@ def search_by_filename_and_file_content(keywords,
     return content
 
 special_path_mapping = {
-    "index" : get_page_file_index,
+    "all" : get_page_file_index,
     "s" : search_by_filename_and_file_content,
 }
 
@@ -429,6 +448,49 @@ def get_the_same_folders_cssjs_files(req_path):
 
     return "%s\n    %s" % (css_buf, js_buf)
 
+
+def zw_macro2md(text):
+    shebang_p = "#!zw"
+    code_p = '(?P<code>[^\f\v]+?)'
+    code_block_p = "^\{\{\{[\s]*%s*%s[\s]*\}\}\}" % (shebang_p, code_p)
+    p_obj = re.compile(code_block_p, re.MULTILINE)
+
+    def code_repl(match_obj):
+        code = match_obj.group('code')
+        code = code.split("\n")[1]
+
+        if code.startswith("ls("):
+            p = 'ls\("(?P<path>.+?)",\s*maxdepth\s*=\s*(?P<maxdepth>\d+)\s*"\)'
+            m = re.match(p, code, re.UNICODE | re.MULTILINE)
+            path = os.path.join(conf.pages_path, m.group("path"))
+            buf = get_page_file_index(path = path, maxdepth = int(m.group("maxdepth")))
+
+            return buf
+        return code
+
+    return p_obj.sub(code_repl, text)
+
+def zwsh_macro2md(text):
+    shebang_p = "#!zwsh"
+    code_p = '(?P<code>[^\f\v]+?)'
+    code_block_p = "^\{\{\{[\s]*%s*%s[\s]*\}\}\}" % (shebang_p, code_p)
+    p_obj = re.compile(code_block_p, re.MULTILINE)
+
+    def code_repl(match_obj):
+        code = match_obj.group('code')
+        code = code.split("\n")[1]
+
+        if code.startswith("run("):
+            p = 'run\("\s*(?P<cmd>.+?)\s*"\)'
+            m = re.match(p, code, re.UNICODE | re.MULTILINE)
+            cmd = m.group("cmd")
+            buf = commons.run(cmd)
+            return buf
+        return code
+
+    return p_obj.sub(code_repl, text)
+
+
 def wp_read_recent_change():
     inputs = web.input()
     limit = inputs.get("limit")
@@ -458,7 +520,7 @@ def wp_read_recent_change():
 
     static_files = get_global_static_files()
     # static_files = "%s\n    %s" % (static_files, get_the_same_folders_cssjs_files(req_path))
-    assert static_files != None
+    assert static_files is not None
 
     return t_render.canvas(conf = conf,
                            req_path = req_path,
@@ -504,9 +566,11 @@ def wp_read(req_path):
         web.seeother("/%s?action=edit" % req_path)
         return
 
-    content = commons.md2html(text=content,
-                                       work_full_path=work_full_path,
-                                       static_file_prefix=static_file_prefix)
+    content = zw_macro2md(text = content)
+#    content = zwsh_macro2md(text = content)
+    content = commons.md2html(text = content,
+                              work_full_path = work_full_path,
+                              static_file_prefix = static_file_prefix)
 
     static_files = get_global_static_files()
     static_files = "%s\n    %s" % (static_files, get_the_same_folders_cssjs_files(req_path))
@@ -528,10 +592,13 @@ def wp_edit(req_path):
 
     if os.path.isfile(full_path):
         content = commons.cat(full_path)
+
     elif os.path.isdir(full_path):
         content = get_dot_idx_content_by_full_path(full_path)
+
     elif not os.path.exists(full_path):
         content = ""
+
     else:
         raise Exception("unknow path")
 
@@ -588,12 +655,16 @@ class WikiPage:
                 return wp_read_recent_change()
             else:
                 return wp_read(req_path)
+
         elif action == "edit":
             return wp_edit(req_path)
+
         elif action == "rename":
             return wp_rename(req_path)
+
         elif action == "delete":
             return wp_delete(req_path)
+
         elif action == "source":
             return wp_source(req_path)
 
@@ -681,15 +752,15 @@ class SpecialWikiPage:
         if limit:
             limit = int(limit)
 
-        if req_path == "index":
+        if req_path == "all":
             content = get_page_file_index(limit=limit, show_full_path=show_full_path)
             content = commons.md2html(content)
 
             static_files = get_global_static_files()
             static_files = "%s\n    %s" % (static_files, get_the_same_folders_cssjs_files(req_path))
 
-            req_path = "~index"
-            title = "Index"
+            req_path = "~all"
+            title = "All"
             return t_render.canvas(conf = conf,
                                    req_path=req_path,
                                    title=title,
@@ -722,7 +793,7 @@ class SpecialWikiPage:
         if content:
             content = commons.md2html(content)
         else:
-            content = "not found matched"
+            content = "matched not found"
 
         return t_render.search(keywords = keywords, content = content,
                                static_files = get_global_static_files())
@@ -735,6 +806,7 @@ class Robots:
 
         web.header("Content-Type", "text/plain")
         return content
+
 
 def start():
     app.run()

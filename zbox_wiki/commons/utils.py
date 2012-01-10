@@ -37,8 +37,21 @@ def which(name):
 
 def run(cmd):
     args = shlex.split(cmd)
-    p_obj = subprocess.Popen(args, stdout = subprocess.PIPE, shell = True)
-    resp = p_obj.stdout.read().strip()
+    try:
+        p_obj = subprocess.Popen(args, stdout = subprocess.PIPE, shell = True)
+#        resp = p_obj.stdout.read().strip("\n")
+        resp = p_obj.stdout.read()
+    except TypeError:
+        resp = None
+
+    if not resp:
+#        resp = os.popen(cmd).read().strip().split('\n')
+        resp = os.popen(cmd).read().strip()
+
+    resp = web.rstrips(resp, "\n")
+
+    resp = web.safeunicode(resp)
+
     return resp
 
 
@@ -47,4 +60,7 @@ if __name__ == "__main__":
     import doctest
     doctest.testmod()
 
-    assert run("uname -s") in ("Darwin", "Linux")
+    import sys
+    if sys.platform == "darwin":
+        print repr(run("uname -s"))
+        assert run("uname -s") in ("Darwin", "Linux")

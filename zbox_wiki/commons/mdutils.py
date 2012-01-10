@@ -33,7 +33,7 @@ def trac_wiki_code_block_to_md_code(text):
     code_p = '(?P<code>[^\f\v]+?)'
 
     code_block_p = "^\{\{\{[\s]*%s*%s[\s]*\}\}\}" % (shebang_p, code_p)
-    code_block_p_obj = re.compile(code_block_p, re.MULTILINE)
+    p_obj = re.compile(code_block_p, re.MULTILINE)
 
     def code_repl(match_obj):
         code = match_obj.group('code')
@@ -41,7 +41,7 @@ def trac_wiki_code_block_to_md_code(text):
         buf = "    %s" % buf
         return buf
 
-    return code_block_p_obj.sub(code_repl, text)
+    return p_obj.sub(code_repl, text)
 
 def code_block_to_md_code(text):
     alias_p = '[a-zA-Z0-9#\-\+ \.]'
@@ -50,7 +50,7 @@ def code_block_to_md_code(text):
     code_p = '(?P<code>[^\f\v]+?)'
 
     code_block_p = "^```[\s]*%s*%s[\s]*```" % (shebang_p, code_p)
-    code_block_p_obj = re.compile(code_block_p, re.MULTILINE)
+    p_obj = re.compile(code_block_p, re.MULTILINE)
 
     def code_repl(match_obj):
         code = match_obj.group('code')
@@ -58,13 +58,13 @@ def code_block_to_md_code(text):
         buf = "    %s" % buf
         return buf
 
-    return code_block_p_obj.sub(code_repl, text)
+    return p_obj.sub(code_repl, text)
 
 def trac_wiki_tex2md(text, save_to_prefix):
     shebang_p = "#!tex"
     code_p = '(?P<code>[^\f\v]+?)'
     code_block_p = "^\{\{\{[\s]*%s*%s[\s]*\}\}\}" % (shebang_p, code_p)
-    code_block_p_obj = re.compile(code_block_p, re.MULTILINE)
+    p_obj = re.compile(code_block_p, re.MULTILINE)
 
     def code_repl(match_obj):
         code = match_obj.group('code')
@@ -72,13 +72,13 @@ def trac_wiki_tex2md(text, save_to_prefix):
 
         return "![%s](%s)" % (png_filename, png_filename)
 
-    return code_block_p_obj.sub(code_repl, text)
+    return p_obj.sub(code_repl, text)
 
 def trac_wiki_dot2md(text, save_to_prefix):
     shebang_p = "#!dot"
     code_p = '(?P<code>[^\f\v]+?)'
     code_block_p = "^\{\{\{[\s]*%s*%s[\s]*\}\}\}" % (shebang_p, code_p)
-    code_block_p_obj = re.compile(code_block_p, re.MULTILINE)
+    p_obj = re.compile(code_block_p, re.MULTILINE)
 
     def code_repl(match_obj):
         code = match_obj.group('code')
@@ -87,7 +87,7 @@ def trac_wiki_dot2md(text, save_to_prefix):
 
         return "![%s](%s)" % (png_filename, png_filename)
 
-    return code_block_p_obj.sub(code_repl, text)
+    return p_obj.sub(code_repl, text)
 
 
 def _fix_img_url(text, static_file_prefix = None):
@@ -199,9 +199,10 @@ def text_path2btns_path(path):
 
     return button_path
 
+
 def md2html(text, work_full_path = None, static_file_prefix = None):
-    assert text != None
-    buf = text    
+    assert text is not None
+    buf = text
     
     if work_full_path and tex2png:
 #        buf = trac_wiki_tex2md(buf, save_to_prefix = work_full_path)

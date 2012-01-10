@@ -61,6 +61,8 @@ def run_instance():
 
     
     import zbox_wiki
+    os.chdir(conf.pages_path)
+
     zbox_wiki.start()
 
 if __name__ == "__main__":

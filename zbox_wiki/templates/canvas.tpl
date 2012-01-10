@@ -16,8 +16,9 @@ $def with (conf, req_path, title, content, static_files=None, toolbox=True, quic
 
 $if quicklinks:
     <div id="quicklinks">
+        <a href="/home">Home</a>
         <a href="/">Recent Changes</a>
-        <a href="/~index">Index</a>
+        <a href="/~all">All</a>
     </div>
 
     <div id="searchbox">

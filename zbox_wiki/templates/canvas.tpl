@@ -19,10 +19,11 @@ $if quicklinks:
         <a href="/home">Home</a>
         <a href="/">Recent Changes</a>
         <a href="/~all">All</a>
+        <a href="/~settings">Settings</a>
     </div>
 
     <div id="searchbox">
-        <form method="POST" action="/~s" accept-charset="utf-8">
+        <form method="POST" action="/~search" accept-charset="utf-8">
             <input type="text" name="k" class="auto-increase-width-size" />
             <input type="submit" value="Search" />
         </form>

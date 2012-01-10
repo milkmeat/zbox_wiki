@@ -31,7 +31,7 @@ $if quicklinks:
 <h2>Search</h2>
 
 <div id="searchbox-not-right">
-    <form method="POST" action="/~s" accept-charset="utf-8">
+    <form method="POST" action="/~search" accept-charset="utf-8">
         <input type="text" value="$keywords" name="k" id="keywords" />
         <input type="submit" value="Search" />
     </form>

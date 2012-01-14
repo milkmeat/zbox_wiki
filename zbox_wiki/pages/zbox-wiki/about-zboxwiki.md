@@ -15,7 +15,6 @@ What is **the most difference** between ZBox Wiki and others?
 
 others
 
- * it really works
  * run up without database
  * IP/network range access restriction, simple ACL
  * auto generate the Table Of Content
@@ -33,29 +32,32 @@ ZBox Wiki run up requires:
  - py-markdown 2.0.3+
 
 
-Mac OS X and Debian/Ubuntu includes Python 2.6+ by default;
+Mac OS X, Debian GNU/Linux and Ubuntu includes Python 2.6+ by default;
 
 
-If you install web.py by `easy_install web.py`,
-you have to fix [issue #95](https://github.com/webpy/webpy/issues/95) by manual.
+Install GitHub(Git GUI client) on Mac OS X:
 
-Strong recommend you install it from latest source:
+    http://mac.github.com/
 
-    git clone git://github.com/webpy/webpy.git
+Install git-core(Git CLI client) on Mac OS X:
+
+    sudo port isntall git-core
+
+
+Install Git on Debian GNU/Linux and Ubuntu:
+
+    sudo apt-get install git-core -y
+
+
+*DON NOT* install web.py via any Package managers,
+you *HAVE TO* install it from latest source:
+
+    git clone git://github.com/shuge/webpy.git
     cd webpy
     sudo python setup.py install
 
 
-Install py-markdown on Mac OS X via MacPorts,
-
-    sudo port install py-markdown
-
-Install py-markdown on Debian/Ubuntu
-
-    sudo aptitude install python-markdown
-
-
-To get the latest development version ZBox wiki from git:
+Install ZBox wiki:
 
     git clone git://github.com/shuge/zbox_wiki.git
     cd zbox_wiki
@@ -87,11 +89,11 @@ Install dvipng on Mac OS X via MacPorts
 
 Install TeX/LaTeX (160 M +) on Debian/Ubuntu
 
-    sudo aptitude install texlive-latex-base
+    sudo apt-get install texlive-latex-base
 
 Install dvipng on Debian/Ubuntu
 
-    sudo aptitude install dvipng
+    sudo apt-get install dvipng
 
 
 ### RUNTIME REQUIREMENTS III (OPTIONAL)
@@ -108,7 +110,7 @@ Install pygraphviz On Mac OS X via MacPorts
 
 Install pygraphviz (20 M +) on Debian/Ubuntu
 
-    sudo aptitude python-pygraphviz
+    sudo apt-get python-pygraphviz
 
 
 Graphviz GUI Editors on Mac OS X in MacPorts:

@@ -7,7 +7,7 @@ http://daringfireball.net/projects/markdown/syntax#philosophy
 
 ## Inline/Span Elements
 
-### bold, italic
+### Bold, Italic
 
 source:
 
@@ -130,6 +130,14 @@ main( void )
 
 source:
 
+```
+!|| name || desc ||
+!| SIP | Session Initial Protocol |
+!| SIP-C | Session Initial Protocol compact version |
+```
+
+HTML:
+
 || name || desc ||
 | SIP | Session Initial Protocol |
 | SIP-C | Session Initial Protocol compact version |
@@ -143,13 +151,6 @@ Graphviz/dot
 digraph G {
     rankdir = "LR"
 
-    PyGraphviz[ URL = "http://networkx.lanl.gov/pygraphviz" ]
-
-    ZBoxWiki[
-        URL = "http://wiki.shuge-lab.org"
-        fontcolor = "red"
-    ]
-
     PyGraphviz -> ZBoxWiki
 }
 }}}
@@ -159,11 +160,11 @@ digraph G {
 TeX/LaTeX
 
 ```{{{#!tex
-\frac{\alpha^{\beta^2}}{\delta + \alpha}
+E_k = \frac{1}{2}m_0 v^2 + \cdots
 }}}
 ```
 
 
 ## References
 
-For more syntax candy, see http://daringfireball.net/projects/markdown/syntax
+ - http://daringfireball.net/projects/markdown/syntax

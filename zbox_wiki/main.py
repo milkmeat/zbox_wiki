@@ -892,14 +892,3 @@ def start():
     fix_403_msg()
     config_session_path()
     app.run()
-
-
-#if __name__ == "__main__":
-#    #
-#    # run it in WSGI mode,
-#    # see also http://webpy.org/cookbook/fastcgi-nginx
-#    #
-#    config_session_path()
-#
-#    web.wsgi.runwsgi = lambda func, addr = None: web.wsgi.runfcgi(func, addr)
-#    app.run()

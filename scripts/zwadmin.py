@@ -43,6 +43,9 @@ If you want to run it as daemon/WSGI:
     chmod +x wsgi_index.py *.sh
     sh start_wsgi.sh
 
+    tail -f /opt/local/var/log/nginx/error.log
+
+
 Please report bug to shuge.lee <AT> GMail.
 """
 

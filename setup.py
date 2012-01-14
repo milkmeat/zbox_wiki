@@ -1,10 +1,5 @@
 #!/usr/bin/env python
-try:
-    import setuptools
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
-    setuptools = None
+from setuptools import setup
 
 short_desc = "a lightweight wiki system with Markdown/Graphviz/LaTeX support"
 
@@ -57,9 +52,8 @@ kwargs = dict(
         "scripts/zwadmin.py",
         "scripts/zwd.py",
     ],
-)    
-    
-if setuptools:
-    kwargs["install_requires"] = ["markdown>=2.1"]
+
+    install_requires = ["markdown>=2.0.0"],
+)
 
 setup(**kwargs)

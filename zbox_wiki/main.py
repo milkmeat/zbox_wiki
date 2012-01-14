@@ -16,6 +16,7 @@ except ImportError:
 
 __all__ = [
     "start",
+    "fix_pages_path_symlink",
 ]
 
 
@@ -33,11 +34,13 @@ app = web.application(mapping, globals())
 
 tpl_render = web.template.render(conf.templates_path)
 
-if not web.config.get("_session"):
-    session = web.session.Session(app, web.session.DiskStore(conf.sessions_path), initializer = {"username": None})
-    web.config._session = session
-else:
-    session = web.config._session
+def config_session_path():
+    global session
+    if not web.config.get("_session"):
+        session = web.session.Session(app, web.session.DiskStore(conf.sessions_path), initializer = {"username": None})
+        web.config._session = session
+    else:
+        session = web.config._session
 
 
 def _check_view_settings(req_obj, req_path):
@@ -100,18 +103,20 @@ def check_acl(f):
     return wrapper
 
 
+def fix_403_msg():
+    if conf.maintainer_email:
+        ro_tpl_p1 = """Page you request doesn't exists, and this wiki is READONLY. <br />
+You could fork it and commit the changes, then send a pull request to maintainer: <br />
 
-if conf.maintainer_email:
-    msg = "This wiki is READONLY." + "<br />"
-    msg += "Maintainer: " + conf.maintainer_email_prefix + " &lt;AT&gt; " + conf.maintainer_email_suffix + "<br />"
-    msg += "<br />"
+<pre>%s</pre>"""
 
-    if conf.repository_url:
-        msg += "You could fork it and commit changes, then send a pull request to maintainer." + "<br />"
-        msg += "<pre><code> git clone %s </code></pre>" % conf.repository_url
+        email = conf.maintainer_email.replace("@", " &lt;AT&gt; ")
+        buf = ro_tpl_p1 % email
 
-    web.Forbidden.message = msg
+        if conf.repository_url:
+            buf += "<pre><code>    git clone %s</code></pre>" % conf.repository_url
 
+        web.Forbidden.message = buf
 
 
 def get_recent_change_list(limit, show_full_path):
@@ -831,19 +836,19 @@ class SpecialWikiPage:
                 show_full_path = 1
             else:
                 show_full_path = 0
-            web.setcookie(name = "show_full_path", value = show_full_path, expires = 3600)
+            web.setcookie(name = "show_full_path", value = show_full_path, expires = 31536000)
 
             if auto_toc == "on":
                 auto_toc = 1
             else:
                 auto_toc = 0
-            web.setcookie(name = "auto_toc", value = auto_toc, expires = 3600)
+            web.setcookie(name = "auto_toc", value = auto_toc, expires = 31536000)
 
             if highlight == "on":
                 highlight = 1
             else:
                 highlight = 0
-            web.setcookie(name = "highlight", value = highlight, expires = 3600)
+            web.setcookie(name = "highlight", value = highlight, expires = 31536000)
 
 
             latest_req_path = web.cookies().get("latest_req_path")
@@ -851,7 +856,10 @@ class SpecialWikiPage:
             if latest_req_path:
                 if not latest_req_path.startswith("/"):
                     latest_req_path = "/" + latest_req_path
-                web.seeother(latest_req_path)
+            else:
+                latest_req_path = "/"
+
+            web.seeother(latest_req_path)
         else:
             raise web.NotFound()
 
@@ -865,14 +873,32 @@ class Robots:
         return content
 
 
+
+def fix_pages_path_symlink(proj_root_full_path):
+    src_full_path = os.path.join(proj_root_full_path, "pages")
+    dst_full_path = os.path.join(proj_root_full_path, "static", "pages")
+
+    # remove invalid symlink
+    dst_real_full_path = os.path.realpath(dst_full_path)
+    if os.path.exists(dst_full_path) and not os.path.exists(dst_real_full_path):
+        os.remove(dst_full_path)
+
+    if not os.path.exists(dst_full_path):
+        os.symlink(src_full_path, dst_full_path)
+
+
 def start():
+    fix_403_msg()
+    config_session_path()
     app.run()
 
 
-if __name__ == "__main__":
-    #
-    # run it in WSGI mode,
-    # see also http://webpy.org/cookbook/fastcgi-nginx
-    #
-    web.wsgi.runwsgi = lambda func, addr = None: web.wsgi.runfcgi(func, addr)
-    app.run()
+#if __name__ == "__main__":
+#    #
+#    # run it in WSGI mode,
+#    # see also http://webpy.org/cookbook/fastcgi-nginx
+#    #
+#    config_session_path()
+#
+#    web.wsgi.runwsgi = lambda func, addr = None: web.wsgi.runfcgi(func, addr)
+#    app.run()

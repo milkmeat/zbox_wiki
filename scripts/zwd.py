@@ -40,27 +40,10 @@ def run_instance():
 
         sys.stderr = file(conf.error_log_path, "a")
 
-    if conf.info_log_path:
-        path = os.path.dirname(conf.info_log_path)
-        if not os.path.exists(path):
-            os.makedirs(path)
 
-        sys.stdout = file(conf.info_log_path, "a")
-
-
-    src_full_path = os.path.join(proj_root_full_path, "pages")
-    dst_full_path = os.path.join(proj_root_full_path, "static", "pages")
-
-    # remove invalid symlink
-    dst_real_full_path = os.path.realpath(dst_full_path)
-    if os.path.exists(dst_full_path) and not os.path.exists(dst_real_full_path):
-        os.remove(dst_full_path)
-
-    if not os.path.exists(dst_full_path):
-        os.symlink(src_full_path, dst_full_path)
-
-    
     import zbox_wiki
+    zbox_wiki.fix_pages_path_symlink(proj_root_full_path)
+
     os.chdir(conf.pages_path)
 
     zbox_wiki.start()

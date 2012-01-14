@@ -7,8 +7,8 @@ import sys
 zwadmin_help_tpl = """
 Usage:
 
-    zwadmin create <path>
-    zwadmin deploy <path>
+    zwadmin.py create <path>
+    zwadmin.py deploy <path>
 
 If you are using VirtualENV, try:
 
@@ -24,7 +24,7 @@ def print_help():
 
 zwd_help_tpl = """
 start ZBox Wiki:
-    zwd --path %s
+    zwd.py --path %s
 
 If you are using VirtualENV, try:
 
@@ -45,11 +45,22 @@ def action_create(proj_root_path):
     for folder_name in ("static", "templates", "pages"):
         src_full_path = os.path.join(zw_path, folder_name)
         dst_full_path = os.path.join(proj_root_path, folder_name)
+
+        if os.path.exists(dst_full_path):
+            msg = "%s already exists, skip" % dst_full_path + "\n"
+            sys.stdout.write(msg)
+            continue
         shutil.copytree(src_full_path, dst_full_path)
 
 
     for folder_name in ("tmp", "sessions"):
         src_full_path = os.path.join(proj_root_path, folder_name)
+
+        if os.path.exists(src_full_path):
+            msg = "%s already exists, skip" % src_full_path + "\n"
+            sys.stdout.write(msg)
+            continue
+
         os.mkdir(src_full_path)
 
 

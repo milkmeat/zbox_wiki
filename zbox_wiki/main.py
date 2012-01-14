@@ -15,6 +15,7 @@ except ImportError:
     import default_conf as conf
 
 __all__ = [
+    "app",
     "start",
     "fix_pages_path_symlink",
 ]

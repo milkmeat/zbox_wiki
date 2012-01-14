@@ -53,7 +53,7 @@ kwargs = dict(
         "scripts/zwd.py",
     ],
 
-    install_requires = ["markdown>=2.0.0"],
+    install_requires = ["markdown>=2.0.0", "argparse"],
 )
 
 setup(**kwargs)

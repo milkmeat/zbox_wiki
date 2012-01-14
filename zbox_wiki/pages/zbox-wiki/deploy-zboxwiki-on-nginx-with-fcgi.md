@@ -53,7 +53,7 @@ Older versions may work, but aren't tested.
 To serve static files add this:
 
         location /static/ {
-            root /path/to/www;
+            root /path/to/zw_instance;
             if (-f $request_filename) {
                rewrite ^/static/(.*)$  /static/$1 break;
             }
@@ -65,14 +65,14 @@ __Note:__ the address and port may be different.
 
 You can start a process with:
 
-	spawn-fcgi -d /path/to/www -f /path/to/www/index.py -a 127.0.0.1 -p 9002
+	spawn-fcgi -d /path/to/www -f /path/to/www/index.py -a 127.0.0.1 -p 9001
 
 ### Start and shutdown script
 
 Start:
 
 	#!/bin/sh
-	spawn-fcgi -d /path/to/www -f /path/to/www/index.py -a 127.0.0.1 -p 9002
+	spawn-fcgi -d /path/to/www -f /path/to/www/index.py -a 127.0.0.1 -p 9001
 
 Shutdown:
 
@@ -113,11 +113,11 @@ To check if it runs do `ps aux | grep index.py` or simply visit the page in your
 
 To reload your configuration:
 
-	/path/to/nginx/sbin/nginx -s reload
+	/path/to/nginx -s reload
 
 And to stop:
 
-	/path/to/nginx/sbin/nginx -s stop
+	/path/to/nginx -s stop
 
 
 ## NOTES

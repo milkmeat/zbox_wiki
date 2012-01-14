@@ -48,5 +48,6 @@ def run_instance():
 
     zbox_wiki.start()
 
+
 if __name__ == "__main__":
     run_instance()

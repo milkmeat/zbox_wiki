@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 import sys
+import time
 import web
 
 import commons
@@ -18,6 +19,8 @@ __all__ = [
     "app",
     "start",
     "fix_pages_path_symlink",
+
+    "zw_macro2md",
 ]
 
 
@@ -27,9 +30,16 @@ web.config.static_path = conf.static_path
 
 mapping = (
     "/robots.txt", "Robots",
-    "/~([a-zA-Z0-9_\-/.]+)", "SpecialWikiPage",
+    "/(~[a-zA-Z0-9_\-/.]+)", "SpecialWikiPage",
     ur"/([a-zA-Z0-9_\-/.%s]*)" % commons.CJK_RANGE, "WikiPage",
 )
+
+g_special_paths = (
+    "~all",
+    "~search",
+    "~settings",
+    "~recent-changes",
+    )
 
 app = web.application(mapping, globals())
 
@@ -264,6 +274,7 @@ def _sequence_to_unorder_list(lines,
     return content
 
 def search_by_filename_and_file_content(keywords,
+                                        show_full_path,
                                         limit = conf.search_page_limit):
     """
     Following doesn't works if cmd contains pipe character:
@@ -345,14 +356,37 @@ def search_by_filename_and_file_content(keywords,
 
     return content
 
-def view_settings():
-    pass
+def get_recent_changes(show_full_path):
+    inputs = web.input()
+    limit = inputs.get("limit")
 
-special_path_mapping = {
-    "all" : get_page_file_index,
-    "search" : search_by_filename_and_file_content,
-    "settings" : view_settings,
-}
+    title = "Recent Changes"
+    static_file_prefix = "/static/pages"
+    req_path = title
+
+    if limit:
+        limit = int(limit) or conf.index_page_limit
+        content = get_recent_change_list(limit, show_full_path = show_full_path)
+    else:
+        content = get_recent_change_list(conf.index_page_limit, show_full_path = show_full_path)
+
+    full_path = get_page_file_or_dir_full_path_by_req_path(req_path)
+
+    if content:
+        content = commons.md2html(text = content,
+                                  work_full_path = full_path,
+                                  static_file_prefix = static_file_prefix)
+    else:
+        content = "Not found"
+
+    static_files = get_global_static_files()
+
+    return tpl_render.canvas(conf = conf,
+                           req_path = req_path,
+                           title = title,
+                           content = content,
+                           toolbox = False,
+                           static_files = static_files)
 
 def _append_static_file(text, filepath, file_type, add_newline=False):
     assert file_type in ("css", "js")
@@ -458,7 +492,7 @@ def get_the_same_folders_cssjs_files(req_path):
     return "%s\n    %s" % (css_buf, js_buf)
 
 
-def zw_macro2md(text, show_full_path):
+def zw_macro2md(text, show_full_path, pages_path):
     shebang_p = "#!zw"
     code_p = '(?P<code>[^\f\v]+?)'
     code_block_p = "^\{\{\{[\s]*%s*%s[\s]*\}\}\}" % (shebang_p, code_p)
@@ -471,7 +505,7 @@ def zw_macro2md(text, show_full_path):
         if code.startswith("ls("):
             p = 'ls\("(?P<path>.+?)",\s*maxdepth\s*=\s*(?P<maxdepth>\d+)\s*"\)'
             m = re.match(p, code, re.UNICODE | re.MULTILINE)
-            path = os.path.join(conf.pages_path, m.group("path"))
+            path = os.path.join(pages_path, m.group("path"))
             buf = get_page_file_index(path = path, maxdepth = int(m.group("maxdepth")),
                                       show_full_path = show_full_path)
 
@@ -480,60 +514,29 @@ def zw_macro2md(text, show_full_path):
 
     return p_obj.sub(code_repl, text)
 
-def zwsh_macro2md(text):
-    shebang_p = "#!zwsh"
-    code_p = '(?P<code>[^\f\v]+?)'
-    code_block_p = "^\{\{\{[\s]*%s*%s[\s]*\}\}\}" % (shebang_p, code_p)
-    p_obj = re.compile(code_block_p, re.MULTILINE)
+#def zwsh_macro2md(text):
+#    shebang_p = "#!zwsh"
+#    code_p = '(?P<code>[^\f\v]+?)'
+#    code_block_p = "^\{\{\{[\s]*%s*%s[\s]*\}\}\}" % (shebang_p, code_p)
+#    p_obj = re.compile(code_block_p, re.MULTILINE)
+#
+#    def code_repl(match_obj):
+#        code = match_obj.group('code')
+#        code = code.split("\n")[1]
+#
+#        if code.startswith("run("):
+#            p = 'run\("\s*(?P<cmd>.+?)\s*"\)'
+#            m = re.match(p, code, re.UNICODE | re.MULTILINE)
+#            cmd = m.group("cmd")
+#            buf = commons.run(cmd)
+#            return buf
+#        return code
+#
+#    return p_obj.sub(code_repl, text)
 
-    def code_repl(match_obj):
-        code = match_obj.group('code')
-        code = code.split("\n")[1]
-
-        if code.startswith("run("):
-            p = 'run\("\s*(?P<cmd>.+?)\s*"\)'
-            m = re.match(p, code, re.UNICODE | re.MULTILINE)
-            cmd = m.group("cmd")
-            buf = commons.run(cmd)
-            return buf
-        return code
-
-    return p_obj.sub(code_repl, text)
 
 
-def wp_read_recent_change(show_full_path, auto_toc, highlight):
-    inputs = web.input()
-    limit = inputs.get("limit")
-
-    title = "Recent Changes"
-    static_file_prefix = "/static/pages"
-    req_path = title
-
-    if limit:
-        limit = int(limit) or conf.index_page_limit
-        content = get_recent_change_list(limit, show_full_path = show_full_path)
-    else:
-        content = get_recent_change_list(conf.index_page_limit, show_full_path = show_full_path)
-
-    full_path = get_page_file_or_dir_full_path_by_req_path(req_path)
-
-    if content:
-        content = commons.md2html(text = content,
-                                  work_full_path = full_path,
-                                  static_file_prefix = static_file_prefix)
-    else:
-        content = "Not found"
-
-    static_files = get_global_static_files()
-
-    return tpl_render.canvas(conf = conf,
-                           req_path = req_path,
-                           title = title,
-                           content = content,
-                           toolbox = False,
-                           static_files = static_files)
-
-def wp_read(req_path, show_full_path, auto_toc, highlight):
+def wp_read(req_path, show_full_path, auto_toc, highlight, pages_path):
     full_path = get_page_file_or_dir_full_path_by_req_path(req_path)
 
     if conf.button_mode_path:
@@ -564,7 +567,7 @@ def wp_read(req_path, show_full_path, auto_toc, highlight):
         web.seeother("/%s?action=edit" % req_path)
         return
 
-    content = zw_macro2md(text = content, show_full_path = show_full_path)
+    content = zw_macro2md(text = content, show_full_path = show_full_path, pages_path = pages_path)
 
     content = commons.md2html(text = content,
                               work_full_path = work_full_path,
@@ -638,6 +641,46 @@ def wp_source(req_path):
         raise web.BadRequest()
 
 
+
+class Cache(object):
+    def __init__(self):
+        self._last_update_ts = time.time()
+        self._cache = {
+            "~all" : None,
+            "~recent-changes" : None,
+        }
+
+    def get_by_req_path(self, req_path):
+        full_path = get_page_file_or_dir_full_path_by_req_path(req_path)
+        if os.path.isdir(full_path):
+            cache_path = os.path.join(full_path, ".cache")
+
+        elif os.path.isfile(full_path):
+            parent = os.path.dirname(full_path)
+            cache_path = os.path.join(parent, ".cache")
+
+
+def get_home_page():
+    home_page = os.path.join(conf.pages_path, "home.md")
+    req_path = "/"
+
+    if os.path.exists(home_page):
+        text = commons.cat(home_page)
+        show_full_path = int(web.cookies().get("show_full_path"))
+        text = zw_macro2md(text, show_full_path = show_full_path, pages_path = conf.pages_path)
+        content = commons.md2html(text)
+    else:
+        content = "..."
+
+    static_files = get_global_static_files() + "\n" + "    " + get_the_same_folders_cssjs_files(req_path)
+
+    return tpl_render.canvas(conf = conf,
+                           req_path = req_path,
+                           title = "Home",
+                           content = content,
+                           static_files = static_files)
+
+
 class WikiPage:
     @check_ip
     @check_acl
@@ -655,9 +698,9 @@ class WikiPage:
 
         if action == "read":
             if req_path == "":
-                return wp_read_recent_change(show_full_path, auto_toc, highlight)
+                return get_home_page()
             else:
-                return wp_read(req_path, show_full_path, auto_toc, highlight)
+                return wp_read(req_path, show_full_path, auto_toc, highlight, pages_path = conf.pages_path)
 
         elif action == "edit":
             return wp_edit(req_path)
@@ -737,87 +780,74 @@ class WikiPage:
         web.redirect(url)
 
 
+def wp_view_settings():
+    show_full_path = web.cookies().get("show_full_path", conf.show_full_path)
+    show_full_path = int(show_full_path)
+
+    auto_toc = web.cookies().get("auto_toc", conf.auto_toc)
+    auto_toc = int(auto_toc)
+
+    highlight = web.cookies().get("highlight", conf.highlight)
+    highlight = int(highlight)
+
+    static_files = get_global_static_files()
+
+    return tpl_render.view_settings(show_full_path = show_full_path,
+                                    auto_toc = auto_toc,
+                                    highlight = highlight,
+                                    static_files = static_files)
+
+
+
 class SpecialWikiPage:
     @check_ip
     @check_acl
     def GET(self, req_path):
-        f = special_path_mapping.get(req_path)
+        assert req_path in g_special_paths
+        
+        if req_path == "~recent-changes":
+            show_full_path = int(web.cookies().get("show_full_path"))
+            return get_recent_changes(show_full_path)
 
-        if f is None:
-            raise web.NotFound()
+        elif req_path == "~all":
+            show_full_path = int(web.cookies().get("show_full_path"))
 
-        inputs = web.input()
-        limit = inputs.get("limit", conf.index_page_limit)
-        if limit:
-            limit = int(limit)
-
-
-        if req_path == "all":
-            show_full_path = web.cookies().get("show_full_path")
-            if show_full_path:
-                show_full_path = int(show_full_path)
-            else:
-                show_full_path = conf.show_full_path
-
-            content = get_page_file_index(limit = limit, show_full_path = show_full_path)
+            content = get_page_file_index(show_full_path = show_full_path)
             content = commons.md2html(content)
 
-            static_files = get_global_static_files()
-            static_files = "%s\n    %s" % (static_files, get_the_same_folders_cssjs_files(req_path))
+            static_files = get_global_static_files(auto_toc = False, highlight = False, reader_mode = False) + "\n" + \
+                           "    " + get_the_same_folders_cssjs_files(req_path)
 
-            req_path = "~all"
             title = "All"
         
             return tpl_render.canvas(conf = conf,
-                                   req_path=req_path,
-                                   title=title,
-                                   content=content,
-                                   toolbox=False,
+                                   req_path = req_path,
+                                   title = title,
+                                   content = content,
+                                   toolbox = False,
                                    static_files = static_files)
             
-        elif req_path == "settings":
-            show_full_path = web.cookies().get("show_full_path", conf.show_full_path)
-            show_full_path = int(show_full_path)
-
-            auto_toc = web.cookies().get("auto_toc", conf.auto_toc)
-            auto_toc = int(auto_toc)
-
-            highlight = web.cookies().get("highlight", conf.highlight)
-            highlight = int(highlight)
-
-            static_files = get_global_static_files()
-
-            return tpl_render.view_settings(show_full_path = show_full_path,
-                                            auto_toc = auto_toc,
-                                            highlight = highlight,
-                                            static_files = static_files)
-        
-        else:
-            raise web.NotFound()
+        elif req_path == "~settings":
+            return wp_view_settings()
 
 
 
     @check_ip
     @check_acl
     def POST(self, req_path):
-        f = special_path_mapping.get(req_path)
+        assert req_path in g_special_paths
+
         inputs = web.input()
-
-        if not f:
-            raise web.NotFound()
-
-        if req_path == "search":
+            
+        if req_path == "~search":
             keywords = inputs.get("k")
             keywords = web.utils.safestr(keywords)
-
             if not keywords:
                 raise web.BadRequest()
 
-            limit = inputs.get("limit", conf.search_page_limit)
-            if limit:
-                limit = int(limit)
+            show_full_path = int(web.cookies().get("show_full_path"))
 
-            content = search_by_filename_and_file_content(keywords, limit=limit)
+            content = search_by_filename_and_file_content(keywords, show_full_path = show_full_path)
 
             if content:
                 content = commons.md2html(content)
@@ -827,8 +857,7 @@ class SpecialWikiPage:
             return tpl_render.search(keywords = keywords, content = content,
                                    static_files = get_global_static_files())
 
-        elif req_path == "settings":
-            inputs = web.input()
+        elif req_path == "~settings":
             show_full_path = inputs.get("show_full_path")
             auto_toc = inputs.get("auto_toc")
             highlight = inputs.get("highlight")
@@ -880,11 +909,13 @@ def fix_pages_path_symlink(proj_root_full_path):
     dst_full_path = os.path.join(proj_root_full_path, "static", "pages")
 
     # remove invalid symlink
-    dst_real_full_path = os.path.realpath(dst_full_path)
-    if os.path.exists(dst_full_path) and not os.path.exists(dst_real_full_path):
+#    dst_real_full_path = os.path.realpath(dst_full_path)
+#    if os.path.exists(dst_full_path) and not os.path.exists(dst_real_full_path):
+    if os.path.exists(dst_full_path) or os.path.islink(dst_full_path):
         os.remove(dst_full_path)
 
     if not os.path.exists(dst_full_path):
+        print "dst_full_path:", dst_full_path
         os.symlink(src_full_path, dst_full_path)
 
 

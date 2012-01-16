@@ -200,7 +200,7 @@ def text_path2btns_path(path):
     return button_path
 
 
-def md2html(text, work_full_path = None, static_file_prefix = None):
+def md2html(text, work_full_path = None, static_file_prefix = None, show_full_path = None):
     assert text is not None
     buf = text
     

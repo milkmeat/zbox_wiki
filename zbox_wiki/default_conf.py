@@ -31,7 +31,8 @@ readonly = True
 
 
 # debug log
-error_log_path = os.path.join(PWD, "tmp", "error_log.txt")
+#error_log_path = os.path.join(PWD, "tmp", "error_log.txt")
+error_log_path = None
 
 
 # bio/info

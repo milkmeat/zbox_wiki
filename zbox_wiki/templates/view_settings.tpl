@@ -21,7 +21,7 @@ $def with (show_full_path, auto_toc, highlight, static_files)
     <h1>View Settings</h1>
 
     <div id="view-settings">
-        <form method="POST">
+        <form method="POST" action="/~settings">
 
 
             <label for="show_full_path">show full path</label>
@@ -53,7 +53,7 @@ $def with (show_full_path, auto_toc, highlight, static_files)
 
 
             <div id="toolbox">
-                <input type="submit" value="Rename" />
+                <input type="submit" value="Save" />
             </div>
         </form>
     </div>

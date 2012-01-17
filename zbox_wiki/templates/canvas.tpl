@@ -1,9 +1,11 @@
-$def with (conf, req_path, title, content, static_files=None, toolbox=True, quicklinks=True)
+$def with (conf, button_path, content, req_path = None, static_files = None, quicklinks = True)
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>$req_path</title>
+    <title></title>
+
+    <link rel="shortcut icon" href="/static/favicon.ico" />
 
     $if static_files:
         $static_files
@@ -16,8 +18,8 @@ $def with (conf, req_path, title, content, static_files=None, toolbox=True, quic
 
 $if quicklinks:
     <div id="quicklinks">
-        <a href="/home">Home</a>
-        <a href="/~recent-changes">Recent Changes</a>
+        <a href="/">Home</a>
+        <a href="/~recent">Recent Changes</a>
         <a href="/~all">All</a>
         <a href="/~settings">Settings</a>
     </div>
@@ -30,12 +32,12 @@ $if quicklinks:
     </div>
 
 
-<div id="title">$title</div>
+<div id="button_path">$button_path</div>
 
 <div id="content">$content</div>
 
 
-$if toolbox:
+$if req_path:
     <div id="toolbox">
         <a href="/$req_path?action=source">Source</a>
 

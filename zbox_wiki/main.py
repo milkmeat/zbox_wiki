@@ -30,20 +30,17 @@ web.config.static_path = conf.static_path
 
 mapping = (
     "/robots.txt", "Robots",
+#    "/favicon.ico", "FaviconICO",
     "/(~[a-zA-Z0-9_\-/.]+)", "SpecialWikiPage",
     ur"/([a-zA-Z0-9_\-/.%s]*)" % commons.CJK_RANGE, "WikiPage",
 )
 
-g_special_paths = (
-    "~all",
-    "~search",
-    "~settings",
-    "~recent-changes",
-    )
+g_redirect_paths = ("favicon.ico", "robots.txt")
+g_special_paths = ("~all", "~recent", "~search", "~settings")
 
 app = web.application(mapping, globals())
-
 tpl_render = web.template.render(conf.templates_path)
+
 
 def config_session_path():
     global session
@@ -55,10 +52,10 @@ def config_session_path():
 
 
 def _check_view_settings(req_obj, req_path):
-    cookies = web.cookies(show_full_path = None, highlight = None, auto_toc = None)
-    if (cookies.get("show_full_path") is None) or \
-       (cookies.get("highlight") is None) or \
-       (cookies.get("auto_toc") is None):
+    cookies = web.cookies(zw_show_full_path = None, zw_highlight = None, zw_auto_toc = None)
+    if (cookies.get("zw_show_full_path") is None) or \
+       (cookies.get("zw_highlight") is None) or \
+       (cookies.get("zw_auto_toc") is None):
         return False
 
     return True
@@ -69,10 +66,10 @@ def check_view_settings(f):
         if _check_view_settings(req_obj, req_path):
             return f(req_obj, req_path)
 
-        web.setcookie(name = "latest_req_path", value = req_path)
+        req_path = cgi.escape("/" + req_path)
+        web.setcookie(name = "zw_latest_req_path", value = req_path)
 
-        url = '/~settings'
-        web.seeother(url)
+        return web.seeother("/~settings")
     return wrapper
 
 
@@ -91,6 +88,7 @@ def check_ip(f):
     def wrapper(req_obj, req_path):
         if _check_ip(req_obj, req_path):
             return f(req_obj, req_path)
+
         raise web.Forbidden()
     return wrapper
 
@@ -130,7 +128,7 @@ You could fork it and commit the changes, then send a pull request to maintainer
         web.Forbidden.message = buf
 
 
-def get_recent_change_list(limit, show_full_path):
+def get_recent_changes_list(limit, show_full_path):
     """ return recent changed files in HTML text for rendering page '/~recent_changed'. """
     get_rc_list_cmd = " cd %s; find . -name '*.md' | xargs ls -t | head -n %d " % \
                       (conf.pages_path, limit)
@@ -148,7 +146,7 @@ def get_recent_change_list(limit, show_full_path):
 
         return _sequence_to_unorder_list(lines, strips_seq_item, callable_obj=callable_obj)
 
-def get_page_file_or_dir_full_path_by_req_path(req_path):
+def req_path_to_full_path(req_path):
     """
     '/zbox-wiki/about-zboxwiki' -> '$PAGE_PATH/zbox-wiki/about-zboxwiki.md'
     '/zbox-wiki/' -> '$PAGE_PATH/zbox-wiki/'
@@ -165,7 +163,7 @@ def get_page_file_title(req_path):
         >>> get_page_file_title('application/air/run-air-application-on-gentoo')
         'run air application on gentoo'
     """
-    full_path = get_page_file_or_dir_full_path_by_req_path(req_path)
+    full_path = req_path_to_full_path(req_path)
     buf = commons.cat(full_path)
 
     p = '^#\s*(?P<title>.+?)\s*$'
@@ -177,7 +175,7 @@ def get_page_file_title(req_path):
     elif '/' in req_path:
         title = req_path.split('/')[-1].replace('-', ' ')
     else:
-        title = 'untitled'
+        title = "Untitled"
 
     return title
 
@@ -366,11 +364,11 @@ def get_recent_changes(show_full_path):
 
     if limit:
         limit = int(limit) or conf.index_page_limit
-        content = get_recent_change_list(limit, show_full_path = show_full_path)
+        content = get_recent_changes_list(limit, show_full_path = show_full_path)
     else:
-        content = get_recent_change_list(conf.index_page_limit, show_full_path = show_full_path)
+        content = get_recent_changes_list(conf.index_page_limit, show_full_path = show_full_path)
 
-    full_path = get_page_file_or_dir_full_path_by_req_path(req_path)
+    full_path = req_path_to_full_path(req_path)
 
     if content:
         content = commons.md2html(text = content,
@@ -379,14 +377,10 @@ def get_recent_changes(show_full_path):
     else:
         content = "Not found"
 
-    static_files = get_global_static_files()
-
     return tpl_render.canvas(conf = conf,
-                           req_path = req_path,
-                           title = title,
+                           button_path = title,
                            content = content,
-                           toolbox = False,
-                           static_files = static_files)
+                           static_files = g_global_static_files)
 
 def _append_static_file(text, filepath, file_type, add_newline=False):
     assert file_type in ("css", "js")
@@ -456,11 +450,12 @@ def get_global_static_files(auto_toc = conf.auto_toc,
             static_files = _append_static_file(static_files, path, file_type = "js")
 
     return static_files
+g_global_static_files = get_global_static_files()
+
 
 def get_the_same_folders_cssjs_files(req_path):
-    # NOTICE: this features doesn't works on file system mounted by sshfs.
-
-    full_path = get_page_file_or_dir_full_path_by_req_path(req_path)
+    """ NOTICE: this features doesn't works on file system mounted by sshfs. """
+    full_path = req_path_to_full_path(req_path)
     if os.path.isfile(full_path):
         work_path = os.path.dirname(full_path)
         static_file_prefix = os.path.join("/static/pages", os.path.dirname(req_path))
@@ -505,45 +500,26 @@ def zw_macro2md(text, show_full_path, pages_path):
         if code.startswith("ls("):
             p = 'ls\("(?P<path>.+?)",\s*maxdepth\s*=\s*(?P<maxdepth>\d+)\s*"\)'
             m = re.match(p, code, re.UNICODE | re.MULTILINE)
-            path = os.path.join(pages_path, m.group("path"))
-            buf = get_page_file_index(path = path, maxdepth = int(m.group("maxdepth")),
-                                      show_full_path = show_full_path)
-
+            full_path = os.path.join(pages_path, m.group("path"))
+            if os.path.exists(full_path):
+                buf = get_page_file_index(path = full_path, maxdepth = int(m.group("maxdepth")),
+                                          show_full_path = show_full_path)
+            else:
+                buf = ""
             return buf
         return code
 
     return p_obj.sub(code_repl, text)
 
-#def zwsh_macro2md(text):
-#    shebang_p = "#!zwsh"
-#    code_p = '(?P<code>[^\f\v]+?)'
-#    code_block_p = "^\{\{\{[\s]*%s*%s[\s]*\}\}\}" % (shebang_p, code_p)
-#    p_obj = re.compile(code_block_p, re.MULTILINE)
-#
-#    def code_repl(match_obj):
-#        code = match_obj.group('code')
-#        code = code.split("\n")[1]
-#
-#        if code.startswith("run("):
-#            p = 'run\("\s*(?P<cmd>.+?)\s*"\)'
-#            m = re.match(p, code, re.UNICODE | re.MULTILINE)
-#            cmd = m.group("cmd")
-#            buf = commons.run(cmd)
-#            return buf
-#        return code
-#
-#    return p_obj.sub(code_repl, text)
-
-
 
 def wp_read(req_path, show_full_path, auto_toc, highlight, pages_path):
-    full_path = get_page_file_or_dir_full_path_by_req_path(req_path)
+    full_path = req_path_to_full_path(req_path)
 
     if conf.button_mode_path:
         buf = commons.text_path2btns_path("/%s" % req_path)
-        title = commons.md2html(buf)
+        button_path = commons.md2html(buf)
     else:
-        title = req_path
+        button_path = req_path
 
     if os.path.isfile(full_path):
         work_full_path = os.path.dirname(full_path)
@@ -578,12 +554,12 @@ def wp_read(req_path, show_full_path, auto_toc, highlight, pages_path):
 
     return tpl_render.canvas(conf = conf,
                            req_path = req_path,
-                           title = title,
+                           button_path = button_path,
                            content = content,
                            static_files = static_files)
 
 def wp_edit(req_path):
-    full_path = get_page_file_or_dir_full_path_by_req_path(req_path)
+    full_path = req_path_to_full_path(req_path)
 
     if conf.button_mode_path:
         buf = commons.text_path2btns_path("/%s" % req_path)
@@ -610,15 +586,15 @@ def wp_edit(req_path):
     return tpl_render.editor(req_path, title, content, static_files=static_files)
 
 def wp_rename(req_path):
-    full_path = get_page_file_or_dir_full_path_by_req_path(req_path)
+    full_path = req_path_to_full_path(req_path)
 
     if not os.path.exists(full_path):
         raise web.NotFound()
 
-    return tpl_render.rename(req_path, static_files = get_global_static_files())
+    return tpl_render.rename(req_path, static_files = g_global_static_files)
 
 def wp_delete(req_path):
-    full_path = get_page_file_or_dir_full_path_by_req_path(req_path)
+    full_path = req_path_to_full_path(req_path)
 
     delete_page_file_by_full_path(full_path)
 
@@ -627,7 +603,7 @@ def wp_delete(req_path):
 
 
 def wp_source(req_path):
-    full_path = get_page_file_or_dir_full_path_by_req_path(req_path)
+    full_path = req_path_to_full_path(req_path)
 
     if os.path.isdir(full_path):
         web.header("Content-Type", "text/plain")
@@ -647,11 +623,11 @@ class Cache(object):
         self._last_update_ts = time.time()
         self._cache = {
             "~all" : None,
-            "~recent-changes" : None,
+            "~recent" : None,
         }
 
     def get_by_req_path(self, req_path):
-        full_path = get_page_file_or_dir_full_path_by_req_path(req_path)
+        full_path = req_path_to_full_path(req_path)
         if os.path.isdir(full_path):
             cache_path = os.path.join(full_path, ".cache")
 
@@ -666,18 +642,18 @@ def get_home_page():
 
     if os.path.exists(home_page):
         text = commons.cat(home_page)
-        show_full_path = int(web.cookies().get("show_full_path"))
+        show_full_path = int(web.cookies().get("zw_show_full_path"))
         text = zw_macro2md(text, show_full_path = show_full_path, pages_path = conf.pages_path)
         content = commons.md2html(text)
     else:
         content = "..."
 
-    static_files = get_global_static_files() + "\n" + "    " + get_the_same_folders_cssjs_files(req_path)
+    static_files = g_global_static_files + "\n" + "    " + get_the_same_folders_cssjs_files(req_path)
 
     return tpl_render.canvas(conf = conf,
-                           req_path = req_path,
-                           title = "Home",
+                           button_path = "Home",
                            content = content,
+                           req_path = req_path,
                            static_files = static_files)
 
 
@@ -692,15 +668,15 @@ class WikiPage:
 
         assert action in ("edit", "read", "rename", "delete", "source")
 
-        show_full_path = int(web.cookies().get("show_full_path"))
-        auto_toc = int(web.cookies().get("auto_toc"))
-        highlight = int(web.cookies().get("highlight"))
+        show_full_path = int(web.cookies().get("zw_show_full_path"))
+        auto_toc = int(web.cookies().get("zw_auto_toc"))
+        highlight = int(web.cookies().get("zw_highlight"))
 
         if action == "read":
             if req_path == "":
-                return get_home_page()
-            else:
-                return wp_read(req_path, show_full_path, auto_toc, highlight, pages_path = conf.pages_path)
+                req_path = "home"
+
+            return wp_read(req_path, show_full_path, auto_toc, highlight, pages_path = conf.pages_path)
 
         elif action == "edit":
             return wp_edit(req_path)
@@ -732,7 +708,7 @@ class WikiPage:
         # NOTICE: if req_path == `users/`, full_path will be `/path/to/users/`,
         # parent will be `/path/to/users`.
 
-        full_path = get_page_file_or_dir_full_path_by_req_path(req_path)
+        full_path = req_path_to_full_path(req_path)
 
         parent = os.path.dirname(full_path)
         if not os.path.exists(parent):
@@ -751,9 +727,9 @@ class WikiPage:
             if not new_path:
                 raise web.BadRequest()
 
-            old_full_path = get_page_file_or_dir_full_path_by_req_path(req_path)
+            old_full_path = req_path_to_full_path(req_path)
             if os.path.isfile(old_full_path):
-                new_full_path = get_page_file_or_dir_full_path_by_req_path(new_path)
+                new_full_path = req_path_to_full_path(new_path)
             elif os.path.isdir(old_full_path):
                 new_full_path = os.path.join(conf.pages_path, new_path)
             else:
@@ -761,7 +737,7 @@ class WikiPage:
 
             if os.path.exists(new_full_path):
                 err_info = "Warning: The page foobar already exists."
-                return tpl_render.rename(req_path, err_info, static_files = get_global_static_files())
+                return tpl_render.rename(req_path, err_info, static_files = g_global_static_files)
 
             parent = os.path.dirname(new_full_path)
             if not os.path.exists(parent):
@@ -781,21 +757,19 @@ class WikiPage:
 
 
 def wp_view_settings():
-    show_full_path = web.cookies().get("show_full_path", conf.show_full_path)
+    show_full_path = web.cookies().get("zw_show_full_path", conf.show_full_path)
     show_full_path = int(show_full_path)
 
-    auto_toc = web.cookies().get("auto_toc", conf.auto_toc)
+    auto_toc = web.cookies().get("zw_auto_toc", conf.auto_toc)
     auto_toc = int(auto_toc)
 
-    highlight = web.cookies().get("highlight", conf.highlight)
+    highlight = web.cookies().get("zw_highlight", conf.highlight)
     highlight = int(highlight)
-
-    static_files = get_global_static_files()
 
     return tpl_render.view_settings(show_full_path = show_full_path,
                                     auto_toc = auto_toc,
                                     highlight = highlight,
-                                    static_files = static_files)
+                                    static_files = g_global_static_files)
 
 
 
@@ -804,27 +778,22 @@ class SpecialWikiPage:
     @check_acl
     def GET(self, req_path):
         assert req_path in g_special_paths
-        
-        if req_path == "~recent-changes":
-            show_full_path = int(web.cookies().get("show_full_path"))
+
+        show_full_path = int(web.cookies().get("zw_show_full_path"))
+
+        if req_path == "~recent":
             return get_recent_changes(show_full_path)
 
         elif req_path == "~all":
-            show_full_path = int(web.cookies().get("show_full_path"))
-
             content = get_page_file_index(show_full_path = show_full_path)
             content = commons.md2html(content)
 
-            static_files = get_global_static_files(auto_toc = False, highlight = False, reader_mode = False) + "\n" + \
-                           "    " + get_the_same_folders_cssjs_files(req_path)
+            static_files = get_global_static_files(auto_toc = False, highlight = False, reader_mode = False) + \
+                           "\n" + "    " + get_the_same_folders_cssjs_files(req_path)
 
-            title = "All"
-        
             return tpl_render.canvas(conf = conf,
-                                   req_path = req_path,
-                                   title = title,
+                                   button_path = "All",
                                    content = content,
-                                   toolbox = False,
                                    static_files = static_files)
             
         elif req_path == "~settings":
@@ -837,6 +806,8 @@ class SpecialWikiPage:
     def POST(self, req_path):
         assert req_path in g_special_paths
 
+        print "req_path:", req_path
+
         inputs = web.input()
             
         if req_path == "~search":
@@ -845,7 +816,7 @@ class SpecialWikiPage:
             if not keywords:
                 raise web.BadRequest()
 
-            show_full_path = int(web.cookies().get("show_full_path"))
+            show_full_path = int(web.cookies().get("zw_show_full_path"))
 
             content = search_by_filename_and_file_content(keywords, show_full_path = show_full_path)
 
@@ -855,7 +826,7 @@ class SpecialWikiPage:
                 content = "matched not found"
 
             return tpl_render.search(keywords = keywords, content = content,
-                                   static_files = get_global_static_files())
+                                   static_files = g_global_static_files)
 
         elif req_path == "~settings":
             show_full_path = inputs.get("show_full_path")
@@ -866,29 +837,29 @@ class SpecialWikiPage:
                 show_full_path = 1
             else:
                 show_full_path = 0
-            web.setcookie(name = "show_full_path", value = show_full_path, expires = 31536000)
+            web.setcookie(name = "zw_show_full_path", value = show_full_path, expires = 31536000)
 
             if auto_toc == "on":
                 auto_toc = 1
             else:
                 auto_toc = 0
-            web.setcookie(name = "auto_toc", value = auto_toc, expires = 31536000)
+            web.setcookie(name = "zw_auto_toc", value = auto_toc, expires = 31536000)
 
             if highlight == "on":
                 highlight = 1
             else:
                 highlight = 0
-            web.setcookie(name = "highlight", value = highlight, expires = 31536000)
+            web.setcookie(name = "zw_highlight", value = highlight, expires = 31536000)
 
 
-            latest_req_path = web.cookies().get("latest_req_path")
+            latest_req_path = web.cookies().get("zw_latest_req_path")
 
-            if latest_req_path:
-                if not latest_req_path.startswith("/"):
-                    latest_req_path = "/" + latest_req_path
+            if latest_req_path and latest_req_path not in g_redirect_paths:
+                web.setcookie(name = "zw_latest_req_path", value = "", expires = -1)
+                latest_req_path = "/" + latest_req_path
             else:
                 latest_req_path = "/"
-
+                
             web.seeother(latest_req_path)
         else:
             raise web.NotFound()
@@ -902,6 +873,15 @@ class Robots:
         web.header("Content-Type", "text/plain")
         return content
 
+
+#class FaviconICO:
+#    def GET(self):
+#        path = os.path.join(conf.static_path, "favicon.ico")
+#        if not os.path.exists(path):
+#            raise web.NotFound()
+#
+#        web.header("Content-Type", "image/vnd.microsoft.icon")
+#        return file(path).read()
 
 
 def fix_pages_path_symlink(proj_root_full_path):

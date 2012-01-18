@@ -1,4 +1,4 @@
-$def with (conf, button_path, content, req_path = None, static_files = None, quicklinks = True)
+$def with (conf, button_path = None, content = "", req_path = None, static_files = None, quicklinks = True)
 <!DOCTYPE html>
 <html>
 <head>
@@ -32,7 +32,8 @@ $if quicklinks:
     </div>
 
 
-<div id="button_path">$button_path</div>
+$if button_path:
+    <div id="button_path">$button_path</div>
 
 <div id="content">$content</div>
 

@@ -1,5 +1,11 @@
-#!/usr/bin/env python
 #-*- coding:utf-8 -*-
+
+__all__ = [
+    "app",
+    "start",
+    "fix_pages_path_symlink",
+]
+
 import cgi
 import functools
 import os
@@ -15,14 +21,6 @@ try:
 except ImportError:
     import default_conf as conf
 
-__all__ = [
-    "app",
-    "start",
-    "fix_pages_path_symlink",
-
-    "zw_macro2md",
-]
-
 
 web.config.debug = conf.debug
 web.config.static_path = conf.static_path
@@ -30,7 +28,6 @@ web.config.static_path = conf.static_path
 
 mapping = (
     "/robots.txt", "Robots",
-#    "/favicon.ico", "FaviconICO",
     "/(~[a-zA-Z0-9_\-/.]+)", "SpecialWikiPage",
     ur"/([a-zA-Z0-9_\-/.%s]*)" % commons.CJK_RANGE, "WikiPage",
 )
@@ -128,6 +125,10 @@ You could fork it and commit the changes, then send a pull request to maintainer
         web.Forbidden.message = buf
 
 
+def get_dot_idx_content_by_full_path(full_path):
+    dot_idx_full_path = os.path.join(full_path, ".index.md")
+    return commons.cat(dot_idx_full_path)
+
 def get_recent_changes_list(limit, show_full_path):
     """ return recent changed files in HTML text for rendering page '/~recent_changed'. """
     get_rc_list_cmd = " cd %s; find . -name '*.md' | xargs ls -t | head -n %d " % \
@@ -137,32 +138,14 @@ def get_recent_changes_list(limit, show_full_path):
     if buf:
         buf = web.utils.safeunicode(buf)
         lines = buf.split("\n")
-        strips_seq_item = ".md"
 
-        if show_full_path:
-            callable_obj = None
-        else:
-            callable_obj = get_page_file_title
+        return sequence_to_unorder_list(lines,
+                                         show_full_path = show_full_path,
+                                         strips_from_name = ".md",
+                                         apply_to_name = get_wiki_page_title_by_req_path)
 
-        return _sequence_to_unorder_list(lines, strips_seq_item, callable_obj=callable_obj)
 
-def req_path_to_full_path(req_path):
-    """
-    '/zbox-wiki/about-zboxwiki' -> '$PAGE_PATH/zbox-wiki/about-zboxwiki.md'
-    '/zbox-wiki/' -> '$PAGE_PATH/zbox-wiki/'
-    """
-    if not req_path.endswith("/"):
-        return "%s.md" % os.path.join(conf.pages_path, req_path)
-    elif req_path == "/":
-        return conf.pages_path
-    else:
-        return os.path.join(conf.pages_path, req_path)
-
-def get_page_file_title(req_path):
-    """
-        >>> get_page_file_title('application/air/run-air-application-on-gentoo')
-        'run air application on gentoo'
-    """
+def get_wiki_page_title_by_req_path(req_path):
     full_path = req_path_to_full_path(req_path)
     buf = commons.cat(full_path)
 
@@ -179,31 +162,36 @@ def get_page_file_title(req_path):
 
     return title
 
-def get_dot_idx_content_by_full_path(full_path):
-    dot_idx_full_path = os.path.join(full_path, ".index.md")
-    return commons.cat(dot_idx_full_path)
 
-def get_page_file_list_content_by_full_path(full_path, show_full_path = conf.show_full_path):
-    """ return files list in specify full path in HTML text """
-    req_path = full_path.replace(conf.pages_path, "")
-    req_path = web.utils.strips(req_path, "/")
+def get_page_file_list_by_req_path(req_path, show_full_path, max_depth = 5, limit = 1000):
+    """ return file list in HTML un-order list text by specify request path """
+    if req_path != "/":
+        req_path = web.utils.strips(req_path, "/")
+    else:
+        req_path = "."
 
-    tree_cmd = " cd %s; find %s -name '*.md' \! -name '.index.md' " % (conf.pages_path, req_path)
+    tree_cmd = " cd %s; find %s -name '*.md' \! -name '.index.md' -maxdepth %d | head -n %d " % \
+               (conf.pages_path, req_path, max_depth, limit)
+
     buf = os.popen(tree_cmd).read().strip()
 
     if buf:
         buf = web.utils.safeunicode(buf)
         lines = buf.split("\n")
-        strips_seq_item = ".md"
 
-        if show_full_path:
-            callable_obj = None
-        else:
-            callable_obj = get_page_file_title
+        lis = []
+        for i in lines:
+            stripped_name = web.utils.strips(i, ".md")
+            name, url = stripped_name, "/" + stripped_name
+            if not show_full_path:
+                name = get_wiki_page_title_by_req_path(name)
 
-        return _sequence_to_unorder_list(lines = lines,
-                                        strips_seq_item = strips_seq_item,
-                                        callable_obj = callable_obj)
+            lis.append('- [%s](%s)' % (name, url))
+
+        buf = "\n".join(lis)
+        content = web.utils.safeunicode(buf)
+
+        return content
 
 def delete_page_file_by_full_path(full_path):
     if os.path.isfile(full_path):
@@ -215,55 +203,75 @@ def delete_page_file_by_full_path(full_path):
         return True
     return False
 
-def get_page_file_index(path = conf.pages_path,
-                        maxdepth = 10,
-                        limit = conf.index_page_limit,
-                        show_full_path = False):
-    """ return all files list in HTML text for rendering page '/index'. """
-    get_page_file_index_cmd = " cd %s; find . -name '*.md' -maxdepth %d | head -n %d " % (path, maxdepth, limit)
-    buf = os.popen(get_page_file_index_cmd).read().strip()
-    if buf:
-        buf = web.utils.safeunicode(buf)
-        lines = buf.split("\n")
+def get_the_same_folders_cssjs_files(req_path):
+    """ NOTICE: this features doesn't works on file system mounted by sshfs. """
+    full_path = req_path_to_full_path(req_path)
+    if os.path.isfile(full_path):
+        work_path = os.path.dirname(full_path)
+        static_file_prefix = os.path.join("/static/pages", os.path.dirname(req_path))
+    elif os.path.isdir(full_path):
+        work_path = full_path
+        static_file_prefix = os.path.join("/static/pages", req_path)
+    else:
+        # special page, such as '/~index'
+        work_path = conf.pages_path
+        static_file_prefix = "/static/pages"
 
-        if show_full_path:
-            callable_obj = None
-        else:
-            callable_obj = get_page_file_title
+    iters = os.listdir(work_path)
+    cssjs_files = [i for i in iters
+                   if (not i.startswith(".")) and (i.endswith(".js") or i.endswith(".css"))]
 
-        if path == conf.pages_path:
-            custom_line_prefix = None
-        else:
-            custom_line_prefix = web.lstrips(path, conf.pages_path)
+    if not cssjs_files:
+        return ""
 
-        content = _sequence_to_unorder_list(lines,
-                                            strips_seq_item = ".md",
-                                            callable_obj = callable_obj,
-                                            custom_line_prefix = custom_line_prefix)
-        return content
+    css_buf = ""
+    js_buf = ""
+    for i in cssjs_files:
+        if i.endswith(".css"):
+            path = os.path.join(static_file_prefix, i)
+            css_buf = append_static_file(css_buf, path, file_type = "css")
+        elif i.endswith(".js"):
+            path = os.path.join(static_file_prefix, i)
+            js_buf = append_static_file(js_buf, path, file_type = "js")
 
-def _sequence_to_unorder_list(lines,
-                              strips_seq_item = None,
-                              callable_obj = None,
-                              custom_line_prefix = None):
+    return "%s\n    %s" % (css_buf, js_buf)
+
+def req_path_to_full_path(req_path):
     """
-        >>> _sequence_to_unorder_list(['a','b','c'])
+    '/zbox-wiki/about-zboxwiki' -> '$PAGE_PATH/zbox-wiki/about-zboxwiki.md'
+    '/zbox-wiki/' -> '$PAGE_PATH/zbox-wiki/'
+    """
+    if not req_path.endswith("/"):
+        return "%s.md" % os.path.join(conf.pages_path, req_path)
+    elif req_path == "/":
+        return conf.pages_path
+    else:
+        return os.path.join(conf.pages_path, req_path)
+
+def sequence_to_unorder_list(lines,
+                              show_full_path,
+                              strips_from_name = None,
+                              apply_to_name = None,
+                              custom_name_prefix = None):
+    """
+        >>> sequence_to_unorder_list(['a','b','c'])
         '- [a](/a)\\n- [b](/b)\\n- [c](/c)'
     """
     lis = []
 
     for i in lines:
         name = web.utils.strips(i, "./")
-        if strips_seq_item:
-            name = web.utils.strips(name, strips_seq_item)
+        if strips_from_name:
+            name = web.utils.strips(name, strips_from_name)
 
-        if not custom_line_prefix:
+        if not custom_name_prefix:
             url = os.path.join("/", name)
         else:
-            url = os.path.join(custom_line_prefix, name)
+            url = os.path.join(custom_name_prefix, name)
 
-        if callable_obj:
-            name = callable_obj(url)
+        if (not show_full_path) and apply_to_name:
+            name = apply_to_name(name)
+
         lis.append('- [%s](%s)' % (name, url))
 
     content = "\n".join(lis)
@@ -345,14 +353,32 @@ def search_by_filename_and_file_content(keywords,
 
     lines = mixed
 
-    if show_full_path:
-        callable_obj = None
-    else:
-        callable_obj = get_page_file_title
-
-    content = _sequence_to_unorder_list(lines, strips_seq_item=".md", callable_obj=callable_obj)
+    content = sequence_to_unorder_list(lines, 
+                                        show_full_path = show_full_path, 
+                                        strips_from_name = ".md", 
+                                        apply_to_name = get_wiki_page_title_by_req_path)
 
     return content
+
+#def get_home_page():
+#    home_page = os.path.join(conf.pages_path, "home.md")
+#
+#    if os.path.exists(home_page):
+#        text = commons.cat(home_page)
+#        show_full_path = int(web.cookies().get("zw_show_full_path"))
+#        text = zw_macro2md(text, show_full_path = show_full_path, pages_path = conf.pages_path)
+#        content = commons.md2html(text)
+#    else:
+#        content = "..."
+#
+#    req_path = "/"
+#    static_files = g_global_static_files + "\n" + "    " + get_the_same_folders_cssjs_files(req_path)
+#
+#    return tpl_render.canvas(conf = conf,
+#                           button_path = "Home",
+#                           content = content,
+#                           req_path = req_path,
+#                           static_files = static_files)
 
 def get_recent_changes(show_full_path):
     inputs = web.input()
@@ -382,7 +408,8 @@ def get_recent_changes(show_full_path):
                            content = content,
                            static_files = g_global_static_files)
 
-def _append_static_file(text, filepath, file_type, add_newline=False):
+
+def append_static_file(text, filepath, file_type, add_newline=False):
     assert file_type in ("css", "js")
 
     if file_type == "css":
@@ -397,7 +424,6 @@ def _append_static_file(text, filepath, file_type, add_newline=False):
 
     return static_files
 
-
 def get_global_static_files(auto_toc = conf.auto_toc,
                             highlight = conf.highlight,
                             reader_mode = conf.reader_mode):
@@ -406,20 +432,20 @@ def get_global_static_files(auto_toc = conf.auto_toc,
     css_files = ("zw-base.css",)
     for i in css_files:
         path = os.path.join("/static", "css", i)
-        static_files = _append_static_file(static_files, path, file_type = "css")
+        static_files = append_static_file(static_files, path, file_type = "css")
 
     if reader_mode:
         path = os.path.join("/static", "css", "zw-reader.css")
-        static_files = _append_static_file(static_files, path, file_type = "css")
+        static_files = append_static_file(static_files, path, file_type = "css")
 
     if auto_toc:
         path = os.path.join("/static", "css", "zw-toc.css")
-        static_files = _append_static_file(static_files, path, file_type = "css")
+        static_files = append_static_file(static_files, path, file_type = "css")
 
         
     if highlight:
         path = os.path.join("/static", "js", "prettify", "prettify.css")
-        static_files = _append_static_file(static_files, path, file_type = "css", add_newline = True)
+        static_files = append_static_file(static_files, path, file_type = "css", add_newline = True)
 
 
     static_files = "%s\n" % static_files
@@ -428,63 +454,29 @@ def get_global_static_files(auto_toc = conf.auto_toc,
     static_files += "\n"
     for i in js_files:
         path = os.path.join("/static", "js", i)
-        static_files = _append_static_file(static_files, path, file_type = "js")
+        static_files = append_static_file(static_files, path, file_type = "js")
 
     js_files = ("zw-base.js", )
     static_files += "\n"
     for i in js_files:
         path = os.path.join("/static", "js", i)
-        static_files = _append_static_file(static_files, path, file_type = "js")
+        static_files = append_static_file(static_files, path, file_type = "js")
 
 
     if auto_toc:
         static_files += "\n"
         path = os.path.join("/static", "js", "zw-toc.js")
-        static_files = _append_static_file(static_files, path, file_type = "js")
+        static_files = append_static_file(static_files, path, file_type = "js")
 
     if highlight:
         static_files += "\n"
         js_files = (os.path.join("prettify", "prettify.js"), "highlight.js")
         for i in js_files:
             path = os.path.join("/static", "js", i)
-            static_files = _append_static_file(static_files, path, file_type = "js")
+            static_files = append_static_file(static_files, path, file_type = "js")
 
     return static_files
 g_global_static_files = get_global_static_files()
-
-
-def get_the_same_folders_cssjs_files(req_path):
-    """ NOTICE: this features doesn't works on file system mounted by sshfs. """
-    full_path = req_path_to_full_path(req_path)
-    if os.path.isfile(full_path):
-        work_path = os.path.dirname(full_path)
-        static_file_prefix = os.path.join("/static/pages", os.path.dirname(req_path))
-    elif os.path.isdir(full_path):
-        work_path = full_path
-        static_file_prefix = os.path.join("/static/pages", req_path)
-    else:
-        # special page, such as '/~index'
-        work_path = conf.pages_path
-        static_file_prefix = "/static/pages"
-
-    iters = os.listdir(work_path)
-    cssjs_files = [i for i in iters
-                   if (not i.startswith(".")) and (i.endswith(".js") or i.endswith(".css"))]
-
-    if not cssjs_files:
-        return ""
-
-    css_buf = ""
-    js_buf = ""
-    for i in cssjs_files:
-        if i.endswith(".css"):
-            path = os.path.join(static_file_prefix, i)
-            css_buf = _append_static_file(css_buf, path, file_type = "css")
-        elif i.endswith(".js"):
-            path = os.path.join(static_file_prefix, i)
-            js_buf = _append_static_file(js_buf, path, file_type = "js")
-
-    return "%s\n    %s" % (css_buf, js_buf)
 
 
 def zw_macro2md(text, show_full_path, pages_path):
@@ -500,10 +492,14 @@ def zw_macro2md(text, show_full_path, pages_path):
         if code.startswith("ls("):
             p = 'ls\("(?P<path>.+?)",\s*maxdepth\s*=\s*(?P<maxdepth>\d+)\s*"\)'
             m = re.match(p, code, re.UNICODE | re.MULTILINE)
-            full_path = os.path.join(pages_path, m.group("path"))
+            req_path = m.group("path")
+            full_path = os.path.join(pages_path, req_path)
+            max_depth = int(m.group("maxdepth"))
+
             if os.path.exists(full_path):
-                buf = get_page_file_index(path = full_path, maxdepth = int(m.group("maxdepth")),
-                                          show_full_path = show_full_path)
+                buf = get_page_file_list_by_req_path(req_path = req_path,
+                                                     show_full_path = show_full_path,
+                                                     max_depth = max_depth)
             else:
                 buf = ""
             return buf
@@ -526,19 +522,20 @@ def wp_read(req_path, show_full_path, auto_toc, highlight, pages_path):
         static_file_prefix = os.path.join("/static/pages", os.path.dirname(req_path))
 
         content = commons.cat(full_path)
+
+        HOME_PAGE = "home"
+        if req_path == HOME_PAGE:
+            button_path = None
+
     elif os.path.isdir(full_path):
         work_full_path = full_path
         static_file_prefix = os.path.join("/static/pages", req_path)
 
-        dot_idx_content = get_dot_idx_content_by_full_path(full_path)
-        page_file_list_content = get_page_file_list_content_by_full_path(full_path,
-                                                                        show_full_path = show_full_path)
-        content = ""
+        buf1 = get_dot_idx_content_by_full_path(full_path) or ""
+        buf2 = get_page_file_list_by_req_path(req_path, show_full_path = show_full_path) or ""
 
-        if dot_idx_content:
-            content = dot_idx_content
-        if page_file_list_content:
-            content = "%s\n\n----\n%s" % (content, page_file_list_content)
+        content = buf1 + "\n" + "----" + "\n" + buf2
+
     else:
         web.seeother("/%s?action=edit" % req_path)
         return
@@ -549,8 +546,8 @@ def wp_read(req_path, show_full_path, auto_toc, highlight, pages_path):
                               work_full_path = work_full_path,
                               static_file_prefix = static_file_prefix)
 
-    static_files = get_global_static_files(auto_toc = auto_toc, highlight = highlight)
-    static_files = "%s\n    %s" % (static_files, get_the_same_folders_cssjs_files(req_path))
+    static_files = get_global_static_files(auto_toc = auto_toc, highlight = highlight) + "\n" + \
+                   "    " + get_the_same_folders_cssjs_files(req_path)
 
     return tpl_render.canvas(conf = conf,
                            req_path = req_path,
@@ -634,27 +631,6 @@ class Cache(object):
         elif os.path.isfile(full_path):
             parent = os.path.dirname(full_path)
             cache_path = os.path.join(parent, ".cache")
-
-
-def get_home_page():
-    home_page = os.path.join(conf.pages_path, "home.md")
-    req_path = "/"
-
-    if os.path.exists(home_page):
-        text = commons.cat(home_page)
-        show_full_path = int(web.cookies().get("zw_show_full_path"))
-        text = zw_macro2md(text, show_full_path = show_full_path, pages_path = conf.pages_path)
-        content = commons.md2html(text)
-    else:
-        content = "..."
-
-    static_files = g_global_static_files + "\n" + "    " + get_the_same_folders_cssjs_files(req_path)
-
-    return tpl_render.canvas(conf = conf,
-                           button_path = "Home",
-                           content = content,
-                           req_path = req_path,
-                           static_files = static_files)
 
 
 class WikiPage:
@@ -785,7 +761,7 @@ class SpecialWikiPage:
             return get_recent_changes(show_full_path)
 
         elif req_path == "~all":
-            content = get_page_file_index(show_full_path = show_full_path)
+            content = get_page_file_list_by_req_path(req_path = "/", show_full_path = show_full_path)
             content = commons.md2html(content)
 
             static_files = get_global_static_files(auto_toc = False, highlight = False, reader_mode = False) + \
@@ -805,8 +781,6 @@ class SpecialWikiPage:
     @check_acl
     def POST(self, req_path):
         assert req_path in g_special_paths
-
-        print "req_path:", req_path
 
         inputs = web.input()
             
@@ -895,7 +869,6 @@ def fix_pages_path_symlink(proj_root_full_path):
         os.remove(dst_full_path)
 
     if not os.path.exists(dst_full_path):
-        print "dst_full_path:", dst_full_path
         os.symlink(src_full_path, dst_full_path)
 
 

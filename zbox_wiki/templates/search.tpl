@@ -1,4 +1,4 @@
-$def with (keywords="", content=None, quicklinks=True, static_files=None)
+$def with (keywords, content, static_files)
 <!DOCTYPE html>
 <html>
 <head>
@@ -19,13 +19,10 @@ $def with (keywords="", content=None, quicklinks=True, static_files=None)
 <div id="container">
 
 
-$if quicklinks:
-    <div id="quicklinks">
-        <a href="/">Recnet Changes</a>
-        <a href="/~index">Index</a>
-    </div>
+<div id="quick_links">
+    <a href="/">Home</a>
+</div>
 
-    <hr />
 
 
 <h2>Search</h2>
@@ -38,10 +35,9 @@ $if quicklinks:
 </div>
 
 
-$if content:
-    <div id="result">
+<div id="result">
     $content
-    </div>
+</div>
 
 
 </div>

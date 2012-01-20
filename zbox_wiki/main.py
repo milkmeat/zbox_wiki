@@ -129,21 +129,6 @@ def get_dot_idx_content_by_full_path(full_path):
     dot_idx_full_path = os.path.join(full_path, ".index.md")
     return commons.cat(dot_idx_full_path)
 
-def get_recent_changes_list(limit, show_full_path):
-    """ return recent changed files in HTML text for rendering page '/~recent_changed'. """
-    get_rc_list_cmd = " cd %s; find . -name '*.md' | xargs ls -t | head -n %d " % \
-                      (conf.pages_path, limit)
-    buf = os.popen(get_rc_list_cmd).read().strip()
-
-    if buf:
-        buf = web.utils.safeunicode(buf)
-        lines = buf.split("\n")
-
-        return sequence_to_unorder_list(lines,
-                                         show_full_path = show_full_path,
-                                         strips_from_name = ".md",
-                                         apply_to_name = get_wiki_page_title_by_req_path)
-
 
 def get_wiki_page_title_by_req_path(req_path):
     full_path = req_path_to_full_path(req_path)
@@ -162,36 +147,30 @@ def get_wiki_page_title_by_req_path(req_path):
 
     return title
 
-
-def get_page_file_list_by_req_path(req_path, show_full_path, max_depth = 5, limit = 1000):
-    """ return file list in HTML un-order list text by specify request path """
-    if req_path != "/":
-        req_path = web.utils.strips(req_path, "/")
-    else:
+def get_page_file_list_by_req_path(req_path, sort_by_modified_ts = False, max_depth = None, limit = None):
+    if req_path in ("~all", "~recent"):
         req_path = "."
+    else:
+        req_path = web.utils.strips(req_path, "/")
 
-    tree_cmd = " cd %s; find %s -name '*.md' \! -name '.index.md' -maxdepth %d | head -n %d " % \
-               (conf.pages_path, req_path, max_depth, limit)
+    cmd = " cd %s; find %s -name '*.md' \! -name '.index.md' " % (conf.pages_path, req_path)
 
-    buf = os.popen(tree_cmd).read().strip()
+    if max_depth is not None:
+        cmd += " -maxdepth %d " % max_depth
 
-    if buf:
-        buf = web.utils.safeunicode(buf)
-        lines = buf.split("\n")
+    if sort_by_modified_ts:
+        cmd += " | xargs ls -t "
 
-        lis = []
-        for i in lines:
-            stripped_name = web.utils.strips(i, ".md")
-            name, url = stripped_name, "/" + stripped_name
-            if not show_full_path:
-                name = get_wiki_page_title_by_req_path(name)
+    if limit is not None:
+        cmd += " | head -n %d " % limit
 
-            lis.append('- [%s](%s)' % (name, url))
+    msg = ">>> " + cmd
+    sys.stdout.write("\n" + msg + "\n")
 
-        buf = "\n".join(lis)
-        content = web.utils.safeunicode(buf)
+    buf = os.popen(cmd).read().strip()
 
-        return content
+    return buf
+
 
 def delete_page_file_by_full_path(full_path):
     if os.path.isfile(full_path):
@@ -248,36 +227,25 @@ def req_path_to_full_path(req_path):
     else:
         return os.path.join(conf.pages_path, req_path)
 
-def sequence_to_unorder_list(lines,
-                              show_full_path,
-                              strips_from_name = None,
-                              apply_to_name = None,
-                              custom_name_prefix = None):
+def sequence_to_unorder_list(seq, show_full_path):
     """
         >>> sequence_to_unorder_list(['a','b','c'])
         '- [a](/a)\\n- [b](/b)\\n- [c](/c)'
     """
     lis = []
-
-    for i in lines:
-        name = web.utils.strips(i, "./")
-        if strips_from_name:
-            name = web.utils.strips(name, strips_from_name)
-
-        if not custom_name_prefix:
-            url = os.path.join("/", name)
-        else:
-            url = os.path.join(custom_name_prefix, name)
-
-        if (not show_full_path) and apply_to_name:
-            name = apply_to_name(name)
+    for i in seq:
+        i = web.utils.strips(i, "./")
+        stripped_name = web.utils.strips(i, ".md")
+        name, url = stripped_name, "/" + stripped_name
+        if not show_full_path:
+            name = get_wiki_page_title_by_req_path(name)
 
         lis.append('- [%s](%s)' % (name, url))
 
-    content = "\n".join(lis)
-    content = web.utils.safeunicode(content)
+    buf = "\n".join(lis)
+    buf = web.utils.safeunicode(buf)
 
-    return content
+    return buf
 
 def search_by_filename_and_file_content(keywords,
                                         show_full_path,
@@ -353,60 +321,9 @@ def search_by_filename_and_file_content(keywords,
 
     lines = mixed
 
-    content = sequence_to_unorder_list(lines, 
-                                        show_full_path = show_full_path, 
-                                        strips_from_name = ".md", 
-                                        apply_to_name = get_wiki_page_title_by_req_path)
+    content = sequence_to_unorder_list(seq = lines, show_full_path = show_full_path)
 
     return content
-
-#def get_home_page():
-#    home_page = os.path.join(conf.pages_path, "home.md")
-#
-#    if os.path.exists(home_page):
-#        text = commons.cat(home_page)
-#        show_full_path = int(web.cookies().get("zw_show_full_path"))
-#        text = zw_macro2md(text, show_full_path = show_full_path, pages_path = conf.pages_path)
-#        content = commons.md2html(text)
-#    else:
-#        content = "..."
-#
-#    req_path = "/"
-#    static_files = g_global_static_files + "\n" + "    " + get_the_same_folders_cssjs_files(req_path)
-#
-#    return tpl_render.canvas(conf = conf,
-#                           button_path = "Home",
-#                           content = content,
-#                           req_path = req_path,
-#                           static_files = static_files)
-
-def get_recent_changes(show_full_path):
-    inputs = web.input()
-    limit = inputs.get("limit")
-
-    title = "Recent Changes"
-    static_file_prefix = "/static/pages"
-    req_path = title
-
-    if limit:
-        limit = int(limit) or conf.index_page_limit
-        content = get_recent_changes_list(limit, show_full_path = show_full_path)
-    else:
-        content = get_recent_changes_list(conf.index_page_limit, show_full_path = show_full_path)
-
-    full_path = req_path_to_full_path(req_path)
-
-    if content:
-        content = commons.md2html(text = content,
-                                  work_full_path = full_path,
-                                  static_file_prefix = static_file_prefix)
-    else:
-        content = "Not found"
-
-    return tpl_render.canvas(conf = conf,
-                           button_path = title,
-                           content = content,
-                           static_files = g_global_static_files)
 
 
 def append_static_file(text, filepath, file_type, add_newline=False):
@@ -497,9 +414,8 @@ def zw_macro2md(text, show_full_path, pages_path):
             max_depth = int(m.group("maxdepth"))
 
             if os.path.exists(full_path):
-                buf = get_page_file_list_by_req_path(req_path = req_path,
-                                                     show_full_path = show_full_path,
-                                                     max_depth = max_depth)
+                buf = get_page_file_list_by_req_path(req_path = req_path, max_depth = max_depth)
+                buf = sequence_to_unorder_list(buf.split("\n"), show_full_path = show_full_path)
             else:
                 buf = ""
             return buf
@@ -530,13 +446,17 @@ def wp_read(req_path, show_full_path, auto_toc, highlight, pages_path):
         else:
             quick_links = False
 
-
     elif os.path.isdir(full_path):
         work_full_path = full_path
         static_file_prefix = os.path.join("/static/pages", req_path)
 
         buf1 = get_dot_idx_content_by_full_path(full_path) or ""
-        buf2 = get_page_file_list_by_req_path(req_path, show_full_path = show_full_path) or ""
+        buf2 = get_page_file_list_by_req_path(req_path)
+
+        if buf2:
+            buf2 = sequence_to_unorder_list(buf2.split("\n"), show_full_path = show_full_path)
+        else:
+            buf2 = ""
 
         content = buf1 + "\n" + "----" + "\n" + buf2
 
@@ -619,15 +539,14 @@ def wp_source(req_path):
         raise web.BadRequest()
 
 
-stat_tpl = """# Stat
+def wp_stat():
+    stat_tpl = """# Stat
 
 || _ || _ ||
 | Wiki pages | %d |
 | Folder | %d |
 
 """
-
-def wp_stat():
     page_count = commons.run(" cd %s ; find . -type f -name '*.md' | wc -l " % conf.pages_path) or 0
     folder_count = commons.run(" cd %s ; find . -type d | wc -l " % conf.pages_path) or 0
     text = stat_tpl % (int(page_count), int(folder_count))
@@ -639,6 +558,7 @@ def wp_stat():
                              req_path = None,
                              static_files = g_global_static_files,
                              quick_links = False)
+
 
 def wp_view_settings():
     show_full_path = web.cookies().get("zw_show_full_path", conf.show_full_path)
@@ -656,26 +576,78 @@ def wp_view_settings():
                                     static_files = g_global_static_files)
 
 
-def wp_get_recent_changes(show_full_path, limit, offset):
-    pass
+def update_recent_change_cache():
+    buf = get_page_file_list_by_req_path(req_path = "~recent", sort_by_modified_ts = True)
+
+    path = os.path.join(conf.pages_path, ".zw_recent_changes_cache")
+    file(path, "w").write(buf)
+
+def get_recent_changes_from_cache():
+    path = os.path.join(conf.pages_path, ".zw_recent_changes_cache")
+
+    if os.path.exists(path):
+        stat = os.stat(path)
+
+        if (time.time() - stat.st_mtime) > conf.cache_update_interval:
+            update_recent_change_cache()
+
+    else:
+        update_recent_change_cache()
+
+    return file(path).read()
+
+def wp_get_recent_changes_from_cache(show_full_path, limit, offset):
+    buf = get_recent_changes_from_cache()
+    all_lines = buf.split()
+    total_lines = len(all_lines)
+
+    title = "Recent Changes (%d/%d)" % (offset, total_lines / limit)
+
+    start = offset * limit
+    end = start + limit
+    lines = all_lines[start : end]
+
+    buf = sequence_to_unorder_list(lines, show_full_path = show_full_path)
+    content = commons.md2html(text = buf, work_full_path = conf.pages_path)
+
+    return tpl_render.canvas(conf = conf, button_path = title, content = content, static_files = g_global_static_files)
 
 
-class Cache(object):
-    def __init__(self):
-        self._last_update_ts = time.time()
-        self._cache = {
-            "~all" : None,
-            "~recent" : None,
-        }
+def update_all_ages_list_cache():
+    buf = get_page_file_list_by_req_path(req_path = "~all")
 
-    def get_by_req_path(self, req_path):
-        full_path = req_path_to_full_path(req_path)
-        if os.path.isdir(full_path):
-            cache_path = os.path.join(full_path, ".cache")
+    path = os.path.join(conf.pages_path, ".zw_all_pages_list_cache")
+    file(path, "w").write(buf)
 
-        elif os.path.isfile(full_path):
-            parent = os.path.dirname(full_path)
-            cache_path = os.path.join(parent, ".cache")
+def get_all_pages_list_from_cache():
+    path = os.path.join(conf.pages_path, ".zw_all_pages_list_cache")
+    
+    if os.path.exists(path):
+        stat = os.stat(path)
+    
+        if (time.time() - stat.st_mtime) > conf.cache_update_interval:
+            update_all_ages_list_cache()
+    
+    else:
+        update_all_ages_list_cache()
+    
+    return file(path).read()
+
+def wp_get_all_pages(show_full_path, limit, offset):
+    buf = get_all_pages_list_from_cache()
+    all_lines = buf.split()
+    total_lines = len(all_lines)
+
+    title = "ALl Pages List (%d/%d)" % (offset, total_lines / limit)
+
+    start = offset * limit
+    end = start + limit
+    lines = all_lines[start : end]
+
+    buf = sequence_to_unorder_list(lines, show_full_path = show_full_path)
+    content = commons.md2html(text = buf, work_full_path = conf.pages_path)
+
+    return tpl_render.canvas(conf = conf, button_path = title, content = content, static_files = g_global_static_files)
 
 
 class WikiPage:
@@ -743,6 +715,7 @@ class WikiPage:
                 web.utils.safewrite(idx_dot_md_full_path, content.replace("\r\n", "\n"))
 
             web.seeother("/%s" % req_path)
+
         elif action == "rename":
             new_path = inputs.get("new_path")
             if not new_path:
@@ -777,9 +750,6 @@ class WikiPage:
         web.redirect(url)
 
 
-
-
-
 class SpecialWikiPage:
     @check_ip
     @check_acl
@@ -788,24 +758,18 @@ class SpecialWikiPage:
 
         show_full_path = int(web.cookies().get("zw_show_full_path"))
 
+        inputs = web.input()
+        offset = int(inputs.get("offset", 0))
+        limit = int(inputs.get("limit", conf.page_limit))
+
         if req_path == "~recent":
-            return get_recent_changes(show_full_path)
+            return wp_get_recent_changes_from_cache(show_full_path = show_full_path, limit = limit, offset = offset)
 
         elif req_path == "~all":
-            content = get_page_file_list_by_req_path(req_path = "/", show_full_path = show_full_path)
-            content = commons.md2html(content)
-
-            static_files = get_global_static_files(auto_toc = False, highlight = False, reader_mode = False) + \
-                           "\n" + "    " + get_the_same_folders_cssjs_files(req_path)
-
-            return tpl_render.canvas(conf = conf,
-                                   button_path = "All",
-                                   content = content,
-                                   static_files = static_files)
+            return wp_get_all_pages(show_full_path = show_full_path, limit = limit, offset = offset)
             
         elif req_path == "~settings":
             return wp_view_settings()
-
 
         elif req_path == "~stat":
             return wp_stat()
@@ -832,8 +796,7 @@ class SpecialWikiPage:
             else:
                 content = "matched not found"
 
-            return tpl_render.search(keywords = keywords, content = content,
-                                   static_files = g_global_static_files)
+            return tpl_render.search(keywords = keywords, content = content, static_files = g_global_static_files)
 
         elif req_path == "~settings":
             show_full_path = inputs.get("show_full_path")

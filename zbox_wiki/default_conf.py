@@ -12,8 +12,11 @@ tmp_path = os.path.join(PWD, "tmp")
 templates_path = os.path.join(PWD, "templates")
 
 
+# cache, default 1 minute
+cache_update_interval = 60
+
 # pagination
-index_page_limit = 50
+page_limit = 50
 search_page_limit = 100
 
 

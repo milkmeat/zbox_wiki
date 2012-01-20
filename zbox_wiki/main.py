@@ -33,7 +33,7 @@ mapping = (
 )
 
 g_redirect_paths = ("favicon.ico", "robots.txt")
-g_special_paths = ("~all", "~recent", "~search", "~settings")
+g_special_paths = ("~all", "~recent", "~search", "~settings", "~stat")
 
 app = web.application(mapping, globals())
 tpl_render = web.template.render(conf.templates_path)
@@ -614,6 +614,46 @@ def wp_source(req_path):
         raise web.BadRequest()
 
 
+stat_tpl = """# Stat
+
+|| _ || _ ||
+| Wiki pages | %d |
+| Folder | %d |
+
+"""
+
+def wp_stat():
+    page_count = commons.run(" cd %s ; find . -type f -name '*.md' | wc -l " % conf.pages_path) or 0
+    folder_count = commons.run(" cd %s ; find . -type d | wc -l " % conf.pages_path) or 0
+    text = stat_tpl % (int(page_count), int(folder_count))
+    content = commons.md2html(text)
+
+    return tpl_render.canvas(conf,
+                             button_path = None,
+                             content = content,
+                             req_path = None,
+                             static_files = g_global_static_files,
+                             quick_links = False)
+
+def wp_view_settings():
+    show_full_path = web.cookies().get("zw_show_full_path", conf.show_full_path)
+    show_full_path = int(show_full_path)
+
+    auto_toc = web.cookies().get("zw_auto_toc", conf.auto_toc)
+    auto_toc = int(auto_toc)
+
+    highlight = web.cookies().get("zw_highlight", conf.highlight)
+    highlight = int(highlight)
+
+    return tpl_render.view_settings(show_full_path = show_full_path,
+                                    auto_toc = auto_toc,
+                                    highlight = highlight,
+                                    static_files = g_global_static_files)
+
+
+def wp_get_recent_changes(show_full_path, limit, offset):
+    pass
+
 
 class Cache(object):
     def __init__(self):
@@ -776,6 +816,8 @@ class SpecialWikiPage:
             return wp_view_settings()
 
 
+        elif req_path == "~stat":
+            return wp_stat()
 
     @check_ip
     @check_acl

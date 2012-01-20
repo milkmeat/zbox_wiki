@@ -4,13 +4,13 @@
     padding-bottom : 30px;
 }
 
-#quicklinks, 
+#quick_links, 
 #searchbox, 
 #toolbox { text-align : right; }
 
 #searchbox { position : fixed; top : 35px; right : 20px;  }
 
-#quicklinks a, #toolbox a { margin-left : 10px ; font-size : 14px; padding : 3px; }
+#quick_links a, #toolbox a { margin-left : 10px ; font-size : 14px; padding : 3px; }
 
 #title { margin-top : 40px; }
 #content {  margin-top : 40px; }

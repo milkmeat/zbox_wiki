@@ -510,6 +510,7 @@ def zw_macro2md(text, show_full_path, pages_path):
 
 def wp_read(req_path, show_full_path, auto_toc, highlight, pages_path):
     full_path = req_path_to_full_path(req_path)
+    quick_links = True
 
     if conf.button_mode_path:
         buf = commons.text_path2btns_path("/%s" % req_path)
@@ -526,6 +527,9 @@ def wp_read(req_path, show_full_path, auto_toc, highlight, pages_path):
         HOME_PAGE = "home"
         if req_path == HOME_PAGE:
             button_path = None
+        else:
+            quick_links = False
+
 
     elif os.path.isdir(full_path):
         work_full_path = full_path
@@ -553,7 +557,8 @@ def wp_read(req_path, show_full_path, auto_toc, highlight, pages_path):
                            req_path = req_path,
                            button_path = button_path,
                            content = content,
-                           static_files = static_files)
+                           static_files = static_files,
+                           quick_links = quick_links)
 
 def wp_edit(req_path):
     full_path = req_path_to_full_path(req_path)

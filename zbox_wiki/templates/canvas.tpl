@@ -1,4 +1,4 @@
-$def with (conf, button_path = None, content = "", req_path = None, static_files = None, quicklinks = True)
+$def with (conf, button_path = None, content = "", req_path = None, static_files = None, quick_links = True)
 <!DOCTYPE html>
 <html>
 <head>
@@ -16,14 +16,17 @@ $def with (conf, button_path = None, content = "", req_path = None, static_files
 
 <div id="container">
 
-$if quicklinks:
-    <div id="quicklinks">
-        <a href="/">Home</a>
+
+<div id="quick_links">
+    <a href="/">Home</a>
+
+    $if quick_links:
         <a href="/~recent">Recent Changes</a>
         <a href="/~all">All</a>
         <a href="/~settings">Settings</a>
-    </div>
+</div>
 
+$if quick_links:
     <div id="searchbox">
         <form method="POST" action="/~search" accept-charset="utf-8">
             <input type="text" name="k" class="auto-increase-width-size" />

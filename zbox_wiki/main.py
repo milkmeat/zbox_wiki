@@ -777,20 +777,6 @@ class WikiPage:
         web.redirect(url)
 
 
-def wp_view_settings():
-    show_full_path = web.cookies().get("zw_show_full_path", conf.show_full_path)
-    show_full_path = int(show_full_path)
-
-    auto_toc = web.cookies().get("zw_auto_toc", conf.auto_toc)
-    auto_toc = int(auto_toc)
-
-    highlight = web.cookies().get("zw_highlight", conf.highlight)
-    highlight = int(highlight)
-
-    return tpl_render.view_settings(show_full_path = show_full_path,
-                                    auto_toc = auto_toc,
-                                    highlight = highlight,
-                                    static_files = g_global_static_files)
 
 
 

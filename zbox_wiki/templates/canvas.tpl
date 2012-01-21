@@ -1,4 +1,4 @@
-$def with (conf, button_path = None, content = "", req_path = None, static_files = None, quick_links = True)
+$def with (conf, button_path = None, content = "", req_path = None, static_files = None, quick_links = True, paginator = None)
 <!DOCTYPE html>
 <html>
 <head>
@@ -37,6 +37,15 @@ $if quick_links:
 
 $if button_path:
     <div id="button_path">$button_path</div>
+
+
+$if paginator:
+    $if paginator.has_previous_page:
+        <div id="previous_page_btn"><a href="$paginator.previous_page_url">previous</a></div>
+
+    $if paginator.has_next_page:
+        <div id="next_page_btn"><a href="$paginator.next_page_url">next</a></div>
+
 
 <div id="content">$content</div>
 

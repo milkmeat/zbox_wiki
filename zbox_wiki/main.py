@@ -15,6 +15,7 @@ import sys
 import time
 import web
 
+from paginator import Paginator
 import commons
 try:
     import conf
@@ -610,7 +611,17 @@ def wp_get_recent_changes_from_cache(show_full_path, limit, offset):
     buf = sequence_to_unorder_list(lines, show_full_path = show_full_path)
     content = commons.md2html(text = buf, work_full_path = conf.pages_path)
 
-    return tpl_render.canvas(conf = conf, button_path = title, content = content, static_files = g_global_static_files)
+    paginator = Paginator()
+    paginator.total = total_lines
+    paginator.current_offset = offset
+    paginator.limit = limit
+    paginator.url = "/~recent"
+
+    return tpl_render.canvas(conf = conf,
+                             button_path = title,
+                             content = content,
+                             static_files = g_global_static_files,
+                             paginator = paginator)
 
 
 def update_all_ages_list_cache():
@@ -647,7 +658,17 @@ def wp_get_all_pages(show_full_path, limit, offset):
     buf = sequence_to_unorder_list(lines, show_full_path = show_full_path)
     content = commons.md2html(text = buf, work_full_path = conf.pages_path)
 
-    return tpl_render.canvas(conf = conf, button_path = title, content = content, static_files = g_global_static_files)
+    paginator = Paginator()
+    paginator.total = total_lines
+    paginator.current_offset = offset
+    paginator.limit = limit
+    paginator.url = "/~all"
+
+    return tpl_render.canvas(conf = conf,
+                             button_path = title,
+                             content = content,
+                             static_files = g_global_static_files,
+                             paginator = paginator)
 
 
 class WikiPage:
@@ -756,16 +777,16 @@ class SpecialWikiPage:
     def GET(self, req_path):
         assert req_path in g_special_paths
 
-        show_full_path = int(web.cookies().get("zw_show_full_path"))
-
         inputs = web.input()
         offset = int(inputs.get("offset", 0))
         limit = int(inputs.get("limit", conf.page_limit))
 
         if req_path == "~recent":
+            show_full_path = int(web.cookies().get("zw_show_full_path", conf.show_full_path))
             return wp_get_recent_changes_from_cache(show_full_path = show_full_path, limit = limit, offset = offset)
 
         elif req_path == "~all":
+            show_full_path = int(web.cookies().get("zw_show_full_path", conf.show_full_path))
             return wp_get_all_pages(show_full_path = show_full_path, limit = limit, offset = offset)
             
         elif req_path == "~settings":

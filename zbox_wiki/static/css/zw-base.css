@@ -57,3 +57,34 @@ a:hover { color: #0f65b8; text-decoration: underline; border-bottom: 0px; }
 
 footer { text-align: center; font-size: 12px; color: #666; }
 footer .hide { display: none; }
+
+
+/* paginator */
+#previous_page_btn {
+    display: table;
+    padding: 10px;
+    text-align: center;
+    position: fixed;
+    height: 300px;
+    width: 150px;
+    left: 10px;
+}
+
+#next_page_btn {
+    display: table;
+    padding: 10px;
+    text-align: center;
+    position: fixed;
+    height: 300px;
+    width: 150px;
+    right: 10px;
+}
+
+#previous_page_btn a,
+#next_page_btn a {
+    display: table-cell;
+    vertical-align: middle;
+    font-size: 24px;
+    padding: 10px;
+    margin: 10px;
+}

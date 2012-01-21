@@ -462,8 +462,10 @@ def wp_read(req_path, show_full_path, auto_toc, highlight, pages_path):
         content = buf1 + "\n" + "----" + "\n" + buf2
 
     else:
-        web.seeother("/%s?action=edit" % req_path)
-        return
+        if req_path == "home" and (not os.path.exists(full_path)):
+            return web.seeother("~all")
+        else:
+            return web.seeother("/%s?action=edit" % req_path)
 
     content = zw_macro2md(text = content, show_full_path = show_full_path, pages_path = pages_path)
 

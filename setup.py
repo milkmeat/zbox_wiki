@@ -53,7 +53,10 @@ kwargs = dict(
         "scripts/zwd.py",
     ],
 
-    install_requires = ["markdown>=2.0.0", "argparse"],
+    install_requires = [
+        # "markdown>=2.1.0",  there is a copy of Markdown-2.1.0 in zbox_wiki/commons/markdown
+        "argparse"
+    ],
 )
 
 setup(**kwargs)

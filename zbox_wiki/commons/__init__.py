@@ -8,10 +8,8 @@ import mdutils
 import netutils
 import utils
 import unicode
-import markdown
 
 from mdutils import *
 from netutils import *
 from utils import *
 from unicode import *
-from markdown import *

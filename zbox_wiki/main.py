@@ -595,7 +595,8 @@ def get_recent_changes_from_cache():
     else:
         update_recent_change_cache()
 
-    return file(path).read()
+    buf = file(path).read()
+    return web.utils.safeunicode(buf)
 
 def wp_get_recent_changes_from_cache(show_full_path, limit, offset):
     buf = get_recent_changes_from_cache()
@@ -642,7 +643,8 @@ def get_all_pages_list_from_cache():
     else:
         update_all_ages_list_cache()
     
-    return file(path).read()
+    buf = file(path).read()
+    return web.utils.safeunicode(buf)
 
 def wp_get_all_pages(show_full_path, limit, offset):
     buf = get_all_pages_list_from_cache()

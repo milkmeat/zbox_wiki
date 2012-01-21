@@ -408,7 +408,7 @@ def zw_macro2md(text, show_full_path, pages_path):
         code = code.split("\n")[1]
 
         if code.startswith("ls("):
-            p = 'ls\("(?P<path>.+?)",\s*maxdepth\s*=\s*(?P<maxdepth>\d+)\s*"\)'
+            p = 'ls\("(?P<path>.+?)",\s*maxdepth\s*=\s*(?P<maxdepth>\d+)\s*\)'
             m = re.match(p, code, re.UNICODE | re.MULTILINE)
             req_path = m.group("path")
             full_path = os.path.join(pages_path, req_path)

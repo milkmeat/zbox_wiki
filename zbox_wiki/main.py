@@ -847,12 +847,12 @@ class SpecialWikiPage:
 
             latest_req_path = web.cookies().get("zw_latest_req_path")
 
-            if latest_req_path and latest_req_path not in g_redirect_paths:
+            if latest_req_path and (latest_req_path not in g_redirect_paths) and latest_req_path != "/":
                 web.setcookie(name = "zw_latest_req_path", value = "", expires = -1)
                 latest_req_path = "/" + latest_req_path
             else:
                 latest_req_path = "/"
-                
+
             web.seeother(latest_req_path)
         else:
             raise web.NotFound()

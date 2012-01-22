@@ -15,7 +15,6 @@ import sys
 import time
 import web
 
-from paginator import Paginator
 import commons
 try:
     import conf
@@ -614,7 +613,7 @@ def wp_get_recent_changes_from_cache(show_full_path, limit, offset):
     buf = sequence_to_unorder_list(lines, show_full_path = show_full_path)
     content = commons.md2html(text = buf, work_full_path = conf.pages_path)
 
-    paginator = Paginator()
+    paginator = commons.Paginator()
     paginator.total = total_lines
     paginator.current_offset = offset
     paginator.limit = limit
@@ -662,7 +661,7 @@ def wp_get_all_pages(show_full_path, limit, offset):
     buf = sequence_to_unorder_list(lines, show_full_path = show_full_path)
     content = commons.md2html(text = buf, work_full_path = conf.pages_path)
 
-    paginator = Paginator()
+    paginator = commons.Paginator()
     paginator.total = total_lines
     paginator.current_offset = offset
     paginator.limit = limit
@@ -883,13 +882,8 @@ def fix_pages_path_symlink(proj_root_full_path):
     src_full_path = os.path.join(proj_root_full_path, "pages")
     dst_full_path = os.path.join(proj_root_full_path, "static", "pages")
 
-    # remove invalid symlink
-#    dst_real_full_path = os.path.realpath(dst_full_path)
-#    if os.path.exists(dst_full_path) and not os.path.exists(dst_real_full_path):
-    if os.path.exists(dst_full_path) or os.path.islink(dst_full_path):
+    if os.path.islink(dst_full_path):
         os.remove(dst_full_path)
-
-    if not os.path.exists(dst_full_path):
         os.symlink(src_full_path, dst_full_path)
 
 

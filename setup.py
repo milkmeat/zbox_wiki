@@ -28,10 +28,15 @@ kwargs = dict(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
+        "Operating System :: OS Independent",
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: POSIX :: Linux",
         "Programming Language :: Python :: 2 :: Only",
+        "Topic :: Software Development :: Documentation",
+        "Topic :: Internet :: WWW/HTTP :: Site Management",
         "Topic :: Text Processing",
+        "Topic :: Text Processing :: Filters"
+        "Topic :: Text Processing :: Markup :: HTML"
         ],
 
 
@@ -64,8 +69,8 @@ kwargs = dict(
     ],
 
     install_requires = [
-        # "markdown>=2.1.0",  there is a copy of Markdown-2.1.0 in zbox_wiki/commons/markdown
-        "argparse"
+        # "markdown>=2.1.0",  there is a copy of Markdown in zbox_wiki/commons/markdown
+        # "argparse>=1.2.1",  there is a copy of argparse in zbox_wiki/commons/argparse
     ],
 )
 

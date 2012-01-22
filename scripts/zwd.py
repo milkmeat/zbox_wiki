@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import os
-import argparse
+from zbox_wiki.commons import argparse
 import sys
 
 
@@ -29,9 +29,13 @@ def run_instance():
     sys.argv = fake_argv
 
 
+    # override zbox_wiki.conf and zbox_wiki.default_conf
+    for i in sys.modules.keys():
+        if i.startswith("zbox_wiki"):
+            del sys.modules[i]
+
     sys.path.insert(0, proj_root_full_path)
     import conf
-
 
     if conf.error_log_path:
         path = os.path.dirname(conf.error_log_path)

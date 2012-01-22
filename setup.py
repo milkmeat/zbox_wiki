@@ -7,16 +7,16 @@ kwargs = dict(
     name = "zbox_wiki",
     description = short_desc,
     long_description = "ZBox Wiki is %s, it's easy to use, easy to read and easy to extend." % short_desc,
-    
+
     version = "201201",
-    
+
     author = "Shuge Lee",
     author_email = "shuge.lee@gmail.com",
-    
+
     url = "https://github.com/shuge/zbox_wiki",
-    
+
     license = "MIT License",
-    
+
     platforms = ["Mac OS X"],
 
 
@@ -33,9 +33,15 @@ kwargs = dict(
         "Programming Language :: Python :: 2 :: Only",
         "Topic :: Text Processing",
         ],
+
+
+    packages = [
+        "zbox_wiki",
+        "zbox_wiki.commons",
+        "zbox_wiki.web",
+        "zbox_wiki.markdown",
+        ],
     
-    
-    packages = ["zbox_wiki", "zbox_wiki.commons"],
     package_data = {
       "zbox_wiki" : [
           "templates/*.tpl",

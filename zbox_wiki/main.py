@@ -1,11 +1,5 @@
+#!/usr/bin/env python
 #-*- coding:utf-8 -*-
-
-__all__ = [
-    "app",
-    "start",
-    "fix_pages_path_symlink",
-]
-
 import cgi
 import functools
 import os
@@ -21,6 +15,18 @@ try:
 except ImportError:
     import default_conf as conf
 
+__all__ = [
+    "app",
+    "fix_pages_path_symlink",
+
+    "Robots",
+    "SpecialWikiPage",
+    "WikiPage",
+
+    "mapping",
+
+    "web",
+]
 
 web.config.debug = conf.debug
 web.config.static_path = conf.static_path
@@ -73,7 +79,10 @@ def check_view_settings(f):
 def _check_ip(req_obj, req_path):
     # allow_ips = ("192.168.0.10", )
     allow_ips = None
-    remote_ip = web.ctx["ip"]
+    # remote_ip = web.ctx["ip"]
+    remote_ip = web.ctx.get("ip")
+    if not remote_ip:
+        return False
 
     if not commons.ip_in_network_ranges(remote_ip, allow_ips):
         return False
@@ -886,8 +895,11 @@ def fix_pages_path_symlink(proj_root_full_path):
         os.remove(dst_full_path)
         os.symlink(src_full_path, dst_full_path)
 
+# def start():
+#     fix_403_msg()
+#     config_session_path()
+#     app.run()
 
-def start():
-    fix_403_msg()
-    config_session_path()
-    app.run()
+# if __name__ == "__main__":
+#     web.wsgi.runwsgi = lambda func, addr=None: web.wsgi.runfcgi(func, addr)
+#     app.run()

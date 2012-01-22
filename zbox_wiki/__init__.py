@@ -14,8 +14,3 @@ __author__ = [
     ]
 
 __license__ = "MIT License"
-
-
-import main
-
-from main import *

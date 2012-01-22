@@ -52,20 +52,22 @@ kwargs = dict(
 
     package_data = {
       "zbox_wiki" : [
-          "templates/*.tpl",
+          "pages/robots.txt",
+          "pages/zbox-wiki/*.md",
+          "pages/zbox-wiki/nginx-*.conf",
+          "scripts/*.py",
+          "scripts/*.sh",
           "static/css/*.css",
           "static/js/*.js",
           "static/js/prettify/*.js",
           "static/js/prettify/*.css",
-          "pages/robots.txt",
-          "pages/zbox-wiki/*.md",
-          "pages/zbox-wiki/nginx.conf",
+          "templates/*.tpl",
           ],
     },
 
     scripts = [
-        "scripts/zwadmin.py",
-        "scripts/zwd.py",
+        "zbox_wiki/scripts/zwadmin.py",
+        "zbox_wiki/scripts/zwd.py",
     ],
 
     install_requires = [

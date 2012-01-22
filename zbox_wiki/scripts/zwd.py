@@ -50,7 +50,7 @@ def run_instance():
 
     os.chdir(conf.pages_path)
 
-    zbox_wiki.start()
+    zbox_wiki.srv_start()
 
 
 if __name__ == "__main__":

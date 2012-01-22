@@ -89,9 +89,16 @@ If you want to run it as daemon/FCGI:
 
     sh start_fcgi.sh
 
+Visit 
+    http://localhost
+
 View its log:
 
     tail -f /opt/local/var/log/nginx/error.log
+
+Stop process:
+
+    sh stop_fcgi.sh
 
 Please report bug to shuge.lee <AT> GMail.
 """

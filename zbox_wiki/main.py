@@ -17,6 +17,8 @@ except ImportError:
 
 __all__ = [
     "app",
+
+    "srv_start",
     "fix_pages_path_symlink",
 
     "Robots",
@@ -895,10 +897,10 @@ def fix_pages_path_symlink(proj_root_full_path):
         os.remove(dst_full_path)
         os.symlink(src_full_path, dst_full_path)
 
-# def start():
-#     fix_403_msg()
-#     config_session_path()
-#     app.run()
+def srv_start():
+    fix_403_msg()
+    config_session_path()
+    app.run()
 
 # if __name__ == "__main__":
 #     web.wsgi.runwsgi = lambda func, addr=None: web.wsgi.runfcgi(func, addr)

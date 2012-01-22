@@ -1,3 +1,10 @@
 include scripts/*.py
+include zbox_wiki/templates/*.tpl
+include zbox_wiki/static/css/*.css
+include zbox_wiki/static/js/*.js
+include zbox_wiki/static/js/prettify/*.js
+include zbox_wiki/static/js/prettify/*.css
+include zbox_wiki/pages/robots.txt
+include zbox_wiki/pages/zbox-wiki/*.md
 include LICENSE.txt
 include README.md

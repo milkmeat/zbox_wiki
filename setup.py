@@ -54,6 +54,7 @@ kwargs = dict(
           "static/js/prettify/*.css",
           "pages/robots.txt",
           "pages/zbox-wiki/*.md",
+          "pages/zbox-wiki/nginx.conf",
           ],
     },
 

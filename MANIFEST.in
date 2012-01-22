@@ -6,5 +6,6 @@ include zbox_wiki/static/js/prettify/*.js
 include zbox_wiki/static/js/prettify/*.css
 include zbox_wiki/pages/robots.txt
 include zbox_wiki/pages/zbox-wiki/*.md
+include zbox_wiki/pages/zbox-wiki/nginx.conf
 include LICENSE.txt
 include README.md

@@ -1,3 +1,5 @@
+ZBox Wiki is released under MIT License.
+
 Copyright (C) <2011> by <shuge.lee AT gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -17,3 +19,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+
+zbox_wiki.commons.argparse is released under Python Software Foundation License;
+zbox_wiki.commons.markdown is released under BSD License;
+zbox_wiki.commons.web (web.py) is released in the public domain.

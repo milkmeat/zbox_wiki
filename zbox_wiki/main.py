@@ -36,6 +36,7 @@ web.config.static_path = conf.static_path
 
 mapping = (
     "/robots.txt", "Robots",
+    "/favicon.ico", "FaviconICO",
     "/(~[a-zA-Z0-9_\-/.]+)", "SpecialWikiPage",
     ur"/([a-zA-Z0-9_\-/.%s]*)" % commons.CJK_RANGE, "WikiPage",
 )
@@ -879,14 +880,14 @@ class Robots:
         return content
 
 
-#class FaviconICO:
-#    def GET(self):
-#        path = os.path.join(conf.static_path, "favicon.ico")
-#        if not os.path.exists(path):
-#            raise web.NotFound()
-#
-#        web.header("Content-Type", "image/vnd.microsoft.icon")
-#        return file(path).read()
+class FaviconICO:
+   def GET(self):
+       path = os.path.join(conf.static_path, "favicon.ico")
+       if not os.path.exists(path):
+           raise web.NotFound()
+
+       web.header("Content-Type", "image/vnd.microsoft.icon")
+       return file(path).read()
 
 
 def fix_pages_path_symlink(proj_root_full_path):

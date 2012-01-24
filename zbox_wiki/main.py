@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 import cgi
+import codecs
 import functools
 import os
 import re
@@ -145,6 +146,8 @@ def get_dot_idx_content_by_full_path(full_path):
 def get_wiki_page_title_by_req_path(req_path):
     full_path = req_path_to_full_path(req_path)
     buf = commons.cat(full_path)
+    if buf:
+        buf = commons.strip_bom(buf)
 
     p = '^#\s*(?P<title>.+?)\s*$'
     p_obj = re.compile(p, re.UNICODE | re.MULTILINE)
@@ -182,7 +185,6 @@ def get_page_file_list_by_req_path(req_path, sort_by_modified_ts = False, max_de
     buf = os.popen(cmd).read().strip()
 
     return buf
-
 
 def delete_page_file_by_full_path(full_path):
     if os.path.isfile(full_path):
@@ -227,17 +229,17 @@ def get_the_same_folders_cssjs_files(req_path):
 
     return "%s\n    %s" % (css_buf, js_buf)
 
-def req_path_to_full_path(req_path):
+def req_path_to_full_path(req_path, pages_path = conf.pages_path):
     """
     '/zbox-wiki/about-zboxwiki' -> '$PAGE_PATH/zbox-wiki/about-zboxwiki.md'
     '/zbox-wiki/' -> '$PAGE_PATH/zbox-wiki/'
     """
     if not req_path.endswith("/"):
-        return "%s.md" % os.path.join(conf.pages_path, req_path)
+        return "%s.md" % os.path.join(pages_path, req_path)
     elif req_path == "/":
-        return conf.pages_path
+        return pages_path
     else:
-        return os.path.join(conf.pages_path, req_path)
+        return os.path.join(pages_path, req_path)
 
 def sequence_to_unorder_list(seq, show_full_path):
     """
@@ -248,6 +250,7 @@ def sequence_to_unorder_list(seq, show_full_path):
     for i in seq:
         i = web.utils.strips(i, "./")
         stripped_name = web.utils.strips(i, ".md")
+
         name, url = stripped_name, "/" + stripped_name
         if not show_full_path:
             name = get_wiki_page_title_by_req_path(name)
@@ -451,6 +454,7 @@ def wp_read(req_path, show_full_path, auto_toc, highlight, pages_path):
         static_file_prefix = os.path.join("/static/pages", os.path.dirname(req_path))
 
         content = commons.cat(full_path)
+        content = commons.strip_bom(content)
 
         HOME_PAGE = "home"
         if req_path == HOME_PAGE:

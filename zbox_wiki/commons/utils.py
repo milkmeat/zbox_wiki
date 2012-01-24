@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import codecs
 import os
 import shlex
 import subprocess
@@ -6,6 +7,7 @@ import web
 
 __all__ = [
     "cat",
+    "strip_bom",
     "which",
     "run",
 ]
@@ -22,6 +24,11 @@ def cat(*args):
 
     return web.safeunicode(buf)
 
+def strip_bom(text):
+    if web.safestr(text[0]) == codecs.BOM_UTF8:
+        text = text[1:]
+
+    return text
 
 def which(name):
     bin_paths = (

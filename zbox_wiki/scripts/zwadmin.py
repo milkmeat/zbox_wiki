@@ -21,7 +21,7 @@ If you are using VirtualENV, try:
 
     cd $(dirname `which python`)
     python zwadmin.py create <path>
-    python zwadmin.py deploy <path>"
+    python zwadmin.py deploy <path>
 
 Please report bug to shuge.lee <AT> GMail.
 """

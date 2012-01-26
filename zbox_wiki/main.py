@@ -900,6 +900,8 @@ def fix_pages_path_symlink(proj_root_full_path):
 
     if os.path.islink(dst_full_path):
         os.remove(dst_full_path)
+        
+    if not os.path.exists(dst_full_path):
         os.symlink(src_full_path, dst_full_path)
 
 def srv_start():

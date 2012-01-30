@@ -55,6 +55,7 @@ kwargs = dict(
           "pages/robots.txt",
           "pages/zbox-wiki/*.md",
           "pages/zbox-wiki/nginx-*.conf",
+          "pages/zbox-wiki/apache2-*.conf",
           "scripts/*.py",
           "scripts/*.sh",
           "static/css/*.css",

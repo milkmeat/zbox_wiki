@@ -1,6 +1,7 @@
 include zbox_wiki/pages/robots.txt
 include zbox_wiki/pages/zbox-wiki/*.md
 include zbox_wiki/pages/zbox-wiki/nginx-*.conf
+include zbox_wiki/pages/zbox-wiki/apache2-*.conf
 include zbox_wiki/scripts/*.py
 include zbox_wiki/scripts/*.sh
 include zbox_wiki/static/css/*.css

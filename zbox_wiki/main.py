@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 import cgi
-import codecs
 import functools
 import os
 import re

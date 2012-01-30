@@ -24,9 +24,6 @@
     padding-left : 0px;
 }
 
-#toc a { display : block; }
-
-/* #toc .h1 { padding-left : 0px; } */
 #toc .h2 { padding-left : 0em; }
 #toc .h3 { padding-left : 1em; }
 #toc .h4 { padding-left : 2em; }

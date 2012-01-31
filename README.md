@@ -31,6 +31,16 @@ Visit [local] [local] for more information.
 
 ## Screenshots
 
+TeX/LaTeX to Image
+
+<a href="http://www.flickr.com/photos/71317153@N06/6795448351/" title="TeX/LaTeX in ZBox Wiki by shugelee, on Flickr"><img src="http://farm8.staticflickr.com/7163/6795448351_6f2b268891_t.jpg" width="100" height="42" alt="TeX/LaTeX in ZBox Wiki"></a>
+
+
+Graphviz/dot to Image
+
+<a href="http://www.flickr.com/photos/71317153@N06/6795448187/" title="Graphviz/dot in ZBox Wiki. by shugelee, on Flickr"><img src="http://farm8.staticflickr.com/7012/6795448187_054ea14707_t.jpg" width="100" height="51" alt="Graphviz/dot in ZBox Wiki."></a>
+
+
 Button Mode Path
 
 <a href="http://www.flickr.com/photos/71317153@N06/6445432217/" title="button-mode-path by shugelee, on Flickr"><img src="http://farm8.staticflickr.com/7159/6445432217_d623acefbe_t.jpg" width="100" height="36" alt="button-mode-path"></a>

@@ -13,7 +13,7 @@ install it
     cd /tmp/my_instance
 
 
-enable anyone edit it via web frontend
+enable anyone could edit it via web frontend
 
     sed -i -e  s/readonly\ =\ True/readonly\ =\ False/g /tmp/foo/myproj/conf.py
 

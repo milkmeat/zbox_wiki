@@ -57,28 +57,6 @@ def config_session_path():
         session = web.config._session
 
 
-def _check_view_settings(req_obj, req_path):
-    cookies = web.cookies(zw_show_full_path = None, zw_highlight = None, zw_auto_toc = None)
-    if (cookies.get("zw_show_full_path") is None) or \
-       (cookies.get("zw_highlight") is None) or \
-       (cookies.get("zw_auto_toc") is None):
-        return False
-
-    return True
-
-def check_view_settings(f):
-    @functools.wraps(f)
-    def wrapper(req_obj, req_path):
-        if _check_view_settings(req_obj, req_path):
-            return f(req_obj, req_path)
-
-        req_path = cgi.escape("/" + req_path)
-        web.setcookie(name = "zw_latest_req_path", value = req_path)
-
-        return web.seeother("/~settings")
-    return wrapper
-
-
 def _check_ip(req_obj, req_path):
     # allow_ips = ("192.168.0.10", )
     allow_ips = None
@@ -692,7 +670,6 @@ def wp_get_all_pages(show_full_path, limit, offset):
 class WikiPage:
     @check_ip
     @check_acl
-    @check_view_settings
     def GET(self, req_path):
         req_path = cgi.escape(req_path)
         inputs = web.input()
@@ -700,9 +677,9 @@ class WikiPage:
 
         assert action in ("edit", "read", "rename", "delete", "source")
 
-        show_full_path = int(web.cookies().get("zw_show_full_path"))
-        auto_toc = int(web.cookies().get("zw_auto_toc"))
-        highlight = int(web.cookies().get("zw_highlight"))
+        show_full_path = int(web.cookies().get("zw_show_full_path", conf.show_full_path))
+        auto_toc = int(web.cookies().get("zw_auto_toc", conf.auto_toc))
+        highlight = int(web.cookies().get("zw_highlight", conf.highlight))
 
         if action == "read":
             if req_path == "":

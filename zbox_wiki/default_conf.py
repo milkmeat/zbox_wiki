@@ -21,16 +21,16 @@ search_page_limit = 100
 
 
 # UI functions 
-show_full_path = False
-auto_toc = True
-highlight = True
+show_full_path = 0
+auto_toc = 1
+highlight = 1
 
-button_mode_path = True
-reader_mode = True
+button_mode_path = 1
+reader_mode = 1
 
 
 # ACL
-readonly = True
+readonly = 1
 
 
 # debug log

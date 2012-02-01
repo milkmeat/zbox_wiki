@@ -524,7 +524,7 @@ def wp_source(req_path):
 
     if os.path.isdir(full_path):
         web.header("Content-Type", "text/plain; charset=UTF-8")
-        return "this is a black hole"
+        return "folder doesn't providers source code in Markdown"
 
     elif os.path.isfile(full_path):
         web.header("Content-Type", "text/plain; charset=UTF-8")
@@ -790,6 +790,9 @@ class SpecialWikiPage:
         elif req_path == "~stat":
             return wp_stat()
 
+        else:
+            return web.BadRequest()
+
     @check_ip
     @check_acl
     def POST(self, req_path):
@@ -800,12 +803,12 @@ class SpecialWikiPage:
         if req_path == "~search":
             keywords = inputs.get("k")
             keywords = web.utils.safestr(keywords)
-            if not keywords:
-                raise web.BadRequest()
+            if keywords:
+                show_full_path = int(web.cookies().get("zw_show_full_path"))
 
-            show_full_path = int(web.cookies().get("zw_show_full_path"))
-
-            content = search_by_filename_and_file_content(keywords, show_full_path = show_full_path)
+                content = search_by_filename_and_file_content(keywords, show_full_path = show_full_path)
+            else:
+                content = None
 
             if content:
                 content = commons.md2html(content)

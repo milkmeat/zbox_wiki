@@ -523,11 +523,11 @@ def wp_source(req_path):
     full_path = req_path_to_full_path(req_path)
 
     if os.path.isdir(full_path):
-        web.header("Content-Type", "text/plain")
+        web.header("Content-Type", "text/plain; charset=UTF-8")
         return "this is a black hole"
 
     elif os.path.isfile(full_path):
-        web.header("Content-Type", "text/plain")
+        web.header("Content-Type", "text/plain; charset=UTF-8")
         return commons.cat(full_path)
 
     else:

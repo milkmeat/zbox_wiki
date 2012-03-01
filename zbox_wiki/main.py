@@ -816,7 +816,8 @@ class SpecialWikiPage:
             keywords = inputs.get("k")
             keywords = web.utils.safestr(keywords)
             if keywords:
-                show_full_path = int(web.cookies().get("zw_show_full_path"))
+                arg = web.cookies().get("zw_show_full_path") or conf.show_full_path
+                show_full_path = int(arg)
 
                 content = search_by_filename_and_file_content(keywords, show_full_path = show_full_path)
             else:

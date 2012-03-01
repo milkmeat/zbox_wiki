@@ -176,12 +176,16 @@ def delete_page_file_by_full_path(full_path):
 def get_the_same_folders_cssjs_files(req_path):
     """ NOTICE: this features doesn't works on file system mounted by sshfs. """
     full_path = req_path_to_full_path(req_path)
+
     if os.path.isfile(full_path):
         work_path = os.path.dirname(full_path)
         static_file_prefix = os.path.join("/static/pages", os.path.dirname(req_path))
     elif os.path.isdir(full_path):
         work_path = full_path
         static_file_prefix = os.path.join("/static/pages", req_path)
+    elif req_path == "home":
+        work_path = os.path.dirname(full_path)
+        static_file_prefix = os.path.join("/static/pages", os.path.dirname(req_path))
     else:
         # special page, such as '/~index'
         work_path = conf.pages_path
@@ -416,15 +420,15 @@ def zw_macro2md(text, show_full_path, pages_path):
     return p_obj.sub(code_repl, text)
 
 
-def wp_read(req_path, show_full_path, auto_toc, highlight, pages_path):
+def wp_read(req_path, show_full_path, auto_toc, highlight, pages_path,
+            show_quick_links, show_source_button):
     full_path = req_path_to_full_path(req_path)
-    quick_links = True
 
     if conf.button_mode_path:
         buf = commons.text_path2btns_path("/%s" % req_path)
         button_path = commons.md2html(buf)
     else:
-        button_path = req_path
+        button_path = None
 
     if os.path.isfile(full_path):
         work_full_path = os.path.dirname(full_path)
@@ -437,7 +441,7 @@ def wp_read(req_path, show_full_path, auto_toc, highlight, pages_path):
         if req_path == HOME_PAGE:
             button_path = None
         else:
-            quick_links = False
+            show_quick_links = False
 
     elif os.path.isdir(full_path):
         work_full_path = full_path
@@ -465,15 +469,17 @@ def wp_read(req_path, show_full_path, auto_toc, highlight, pages_path):
                               work_full_path = work_full_path,
                               static_file_prefix = static_file_prefix)
 
-    static_files = get_global_static_files(auto_toc = auto_toc, highlight = highlight) + "\n" + \
-                   "    " + get_the_same_folders_cssjs_files(req_path)
+    static_files = get_the_same_folders_cssjs_files(req_path)
+    if not static_files:
+        static_files = get_global_static_files(auto_toc = auto_toc, highlight = highlight) + "\n"
 
     return tpl_render.canvas(conf = conf,
                            req_path = req_path,
                            button_path = button_path,
                            content = content,
                            static_files = static_files,
-                           quick_links = quick_links)
+                           show_quick_links = show_quick_links,
+                           show_source_button = show_source_button)
 
 def wp_edit(req_path):
     full_path = req_path_to_full_path(req_path)
@@ -552,7 +558,7 @@ def wp_stat():
                              content = content,
                              req_path = None,
                              static_files = g_global_static_files,
-                             quick_links = False)
+                             show_quick_links = False)
 
 
 def wp_view_settings():
@@ -685,7 +691,13 @@ class WikiPage:
             if req_path == "":
                 req_path = "home"
 
-            return wp_read(req_path, show_full_path, auto_toc, highlight, pages_path = conf.pages_path)
+            return wp_read(req_path = req_path,
+                           show_full_path = show_full_path,
+                           auto_toc = auto_toc,
+                           highlight = highlight,
+                           pages_path = conf.pages_path,
+                           show_quick_links = conf.show_quick_links,
+                           show_source_button = conf.show_source_button)
 
         elif action == "edit":
             return wp_edit(req_path)

@@ -25,8 +25,12 @@ show_full_path = 0
 auto_toc = 1
 highlight = 1
 
+# a.k.a. 'navigation bar' on top
+show_quick_links = 1
+
 button_mode_path = 1
 reader_mode = 1
+show_source_button = 1
 
 
 # ACL

@@ -1,4 +1,4 @@
-$def with (conf, button_path = None, content = "", req_path = None, static_files = None, quick_links = True, paginator = None)
+$def with (conf, button_path = None, content = "", req_path = None, static_files = None, show_quick_links = True, paginator = None, show_source_button = True)
 <!DOCTYPE html>
 <html>
 <head>
@@ -20,13 +20,13 @@ $def with (conf, button_path = None, content = "", req_path = None, static_files
 <div id="quick_links">
     <a href="/">Home</a>
 
-    $if quick_links:
+    $if show_quick_links:
         <a href="/~recent">Recent Changes</a>
         <a href="/~all">All</a>
         <a href="/~settings">Settings</a>
 </div>
 
-$if quick_links:
+$if show_quick_links:
     <div id="searchbox">
         <form method="POST" action="/~search" accept-charset="utf-8">
             <input type="text" name="k" class="auto-increase-width-size" />
@@ -52,7 +52,8 @@ $if paginator:
 
 $if req_path:
     <div id="toolbox">
-        <a href="/$req_path?action=source">Source</a>
+        $if show_source_button:
+            <a href="/$req_path?action=source">Source</a>
 
         $if not conf.readonly:
             <a href="/$req_path?action=delete">Delete</a>
